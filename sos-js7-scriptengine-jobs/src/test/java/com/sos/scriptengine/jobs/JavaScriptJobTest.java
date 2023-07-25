@@ -34,6 +34,17 @@ public class JavaScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobNodeJS() throws Exception {
+        String file = "src/test/resources/jobs/javascript/JS7Job-NODEJS.js";
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(JavaScriptJob.JS7_GRAALVM_JS_OPTION, "src/test/resources/jobs/javascript/GraalJSScriptEngineOptions.json");
+
+        execute(file, args);
+    }
+
+    @Ignore
+    @Test
     public void testJobWithCredentialStore() throws Exception {
         String file = "src/test/resources/jobs/javascript/JS7Job-CredentialStore.js";
 

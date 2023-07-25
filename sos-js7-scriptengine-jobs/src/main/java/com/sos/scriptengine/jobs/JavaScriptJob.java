@@ -1,6 +1,7 @@
 package com.sos.scriptengine.jobs;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -15,19 +16,29 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
+import org.graalvm.polyglot.HostAccess;
+
+import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
+import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.exception.JobArgumentException;
+import com.sos.scriptengine.json.GraalJSScriptEngineOptions;
 
 public class JavaScriptJob extends Job<JobArguments> {
 
+    public static final String JS7_GRAALVM_JS_OPTION = "js7_options.graalvm.js";
     private static final String SCRIPT_ENGINE_NAME = "Graal.js";
+    private static final String GRAALVM_SCRIPT_ENGINE_NAME = "js";
 
     private static final String BASIC_SCRIPT_RESOURCE = JavaScriptJob.class.getSimpleName() + ".js";
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
@@ -69,7 +80,7 @@ public class JavaScriptJob extends Job<JobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
-        ScriptEngine engine = createScriptEngine();
+        ScriptEngine engine = createGraalJSScriptEngine(step);
         engine.eval(BASIC_SCRIPT + "\n" + script);
         Invocable invocable = (Invocable) engine;
 
@@ -77,7 +88,7 @@ public class JavaScriptJob extends Job<JobArguments> {
         invocable.invokeMethod(job, JOB_METHOD_PROCESS_ORDER, step);
     }
 
-    /** com.sos.commons.job.ABlockingInternalJob - [cancel/kill][job name=javascript_job][onOrderProcessCancel]<br/>
+    /** com.sos.js7.job.Job - [cancel/kill][job name=javascript_job][onOrderProcessCancel]<br/>
      * java.lang.IllegalStateException: <br/>
      * Multi threaded access requested by thread Thread[#46,JS7 blocking job 46,5,main] but is not allowed for language(s) js.<br/>
      * at com.oracle.truffle.polyglot.PolyglotEngineException.illegalState(PolyglotEngineException.java:135) ~[org.graalvm.truffle:?]<br>
@@ -152,7 +163,20 @@ public class JavaScriptJob extends Job<JobArguments> {
         Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
         bindings.put("polyglot.js.allowHostAccess", true);
         bindings.put("polyglot.js.allowHostClassLookup", true);
+        bindings.put("polyglot.js.allowIO", true);
         return engine;
+    }
+
+    private ScriptEngine createGraalJSScriptEngine(OrderProcessStep<JobArguments> step) throws Exception {
+        // .allowIO(IOAccess.ALL)
+        Builder builder = Context.newBuilder(GRAALVM_SCRIPT_ENGINE_NAME).allowIO(true).allowHostAccess(HostAccess.ALL).allowHostClassLookup(
+                className -> true).allowExperimentalOptions(true);
+
+        Map<String, String> options = getGraalJSScriptEngineOptions(step);
+        if (options != null) {
+            builder.options(options);
+        }
+        return GraalJSScriptEngine.create(null, builder);
     }
 
     private synchronized void setBasicScript() throws Exception {
@@ -161,7 +185,25 @@ public class JavaScriptJob extends Job<JobArguments> {
         }
     }
 
-    public String inputStreamToString(InputStream inputStream) throws IOException {
+    // TODO read one time - requirement: agent creates the files 1 time instead of per step
+    private Map<String, String> getGraalJSScriptEngineOptions(OrderProcessStep<JobArguments> step) throws Exception {
+        String p = step.getAllArgumentsAsNameValueMap().entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(JS7_GRAALVM_JS_OPTION)).map(e -> e
+                .getValue().toString()).findFirst().orElse(null);
+        if (!SOSString.isEmpty(p)) {
+            File f = new File(p);
+            if (f.exists()) {
+                GraalJSScriptEngineOptions o = JobHelper.OBJECT_MAPPER.readValue(f, GraalJSScriptEngineOptions.class);
+                if (o != null && o.getOptions() != null) {
+                    return o.getOptions();
+                }
+            } else {
+                step.getLogger().error(String.format("[setGraalJSScriptEngineOptions][%s=%s]file not found", JS7_GRAALVM_JS_OPTION, p));
+            }
+        }
+        return null;
+    }
+
+    private String inputStreamToString(InputStream inputStream) throws IOException {
         try (ByteArrayOutputStream result = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[1024];
             int length;

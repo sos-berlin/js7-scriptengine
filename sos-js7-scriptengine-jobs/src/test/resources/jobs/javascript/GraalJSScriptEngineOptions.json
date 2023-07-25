@@ -1,0 +1,8 @@
+{
+	"_comment": "js.commonjs-core-modules-replacements: Buffer:Buffer,URL:url",
+	"options": {
+		"js.commonjs-require": true,
+		"js.commonjs-require-cwd": "/var/sos-berlin.com/js7/agent/node_modules"
+	}
+}
+		

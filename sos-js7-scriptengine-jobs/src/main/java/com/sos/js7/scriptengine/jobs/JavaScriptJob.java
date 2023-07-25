@@ -1,4 +1,4 @@
-package com.sos.scriptengine.jobs;
+package com.sos.js7.scriptengine.jobs;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,7 +32,7 @@ import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.exception.JobArgumentException;
-import com.sos.scriptengine.json.GraalJSScriptEngineOptions;
+import com.sos.js7.scriptengine.json.GraalJSScriptEngineOptions;
 
 public class JavaScriptJob extends Job<JobArguments> {
 

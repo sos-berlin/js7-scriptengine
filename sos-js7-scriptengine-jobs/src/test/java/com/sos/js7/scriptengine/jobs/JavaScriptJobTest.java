@@ -1,4 +1,4 @@
-package com.sos.scriptengine.jobs;
+package com.sos.js7.scriptengine.jobs;
 
 import java.nio.file.Paths;
 import java.util.HashMap;

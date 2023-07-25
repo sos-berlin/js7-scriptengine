@@ -1,4 +1,4 @@
-package com.sos.scriptengine.json;
+package com.sos.js7.scriptengine.json;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

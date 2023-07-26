@@ -4,7 +4,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -189,18 +192,37 @@ public class JavaScriptJob extends Job<JobArguments> {
     private Map<String, String> getGraalJSScriptEngineOptions(OrderProcessStep<JobArguments> step) throws Exception {
         String p = step.getAllArgumentsAsNameValueMap().entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(JS7_GRAALVM_JS_OPTION)).map(e -> e
                 .getValue().toString()).findFirst().orElse(null);
-        if (!SOSString.isEmpty(p)) {
+
+        Map<String, String> options = null;
+        if (SOSString.isEmpty(p)) {
+            String jh = System.getenv().get("JAVA_HOME");
+            if (!SOSString.isEmpty(jh)) {
+                Path np = null;
+                try {
+                    np = Paths.get(jh).resolve("bin").resolve("node_modules");
+                    if (np.toFile().exists()) {
+                        options = new HashMap<>();
+                        options.put("js.commonjs-require", "true");
+                        options.put("js.commonjs-require-cwd", np.toString());
+                    } else {
+                        step.getLogger().debug(String.format("[setGraalJSScriptEngineOptions][JAVA_HOME=%s][%s]file not found", jh, np));
+                    }
+                } catch (Throwable e) {
+                    step.getLogger().warn(String.format("[setGraalJSScriptEngineOptions][JAVA_HOME=%s][%s]%s", jh, np, e.toString()));
+                }
+            }
+        } else {
             File f = new File(p);
             if (f.exists()) {
                 GraalJSScriptEngineOptions o = JobHelper.OBJECT_MAPPER.readValue(f, GraalJSScriptEngineOptions.class);
                 if (o != null && o.getOptions() != null) {
-                    return o.getOptions();
+                    options = o.getOptions();
                 }
             } else {
-                step.getLogger().error(String.format("[setGraalJSScriptEngineOptions][%s=%s]file not found", JS7_GRAALVM_JS_OPTION, p));
+                step.getLogger().warn(String.format("[setGraalJSScriptEngineOptions][%s=%s]file not found", JS7_GRAALVM_JS_OPTION, p));
             }
         }
-        return null;
+        return options;
     }
 
     private String inputStreamToString(InputStream inputStream) throws IOException {

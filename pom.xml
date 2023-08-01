@@ -13,6 +13,7 @@
 	</modules>
 
 	<properties>
+    <engine.version>2.6.2-SNAPSHOT</engine.version>
 		<log4j2.version>2.20.0</log4j2.version>
 		<slf4j.version>1.7.36</slf4j.version>
 		<junit.version>4.13.1</junit.version>
@@ -60,7 +61,7 @@
 			<dependency>
 				<groupId>com.sos-berlin.js7.engine</groupId>
 				<artifactId>js7-launcher-for-java_2.13</artifactId>
-				<version>${project.version}</version>
+				<version>${engine.version}</version>
 				<exclusions>
 					<exclusion>
 						<groupId>com.intellij</groupId>

@@ -25,6 +25,7 @@ import org.graalvm.polyglot.HostAccess;
 
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
@@ -195,7 +196,7 @@ public class JavaScriptJob extends Job<JobArguments> {
 
         Map<String, String> options = null;
         if (SOSString.isEmpty(p)) {
-            String jh = System.getenv().get("JAVA_HOME");
+            String jh = SOSShell.getJavaHome();
             if (!SOSString.isEmpty(jh)) {
                 Path np = null;
                 try {

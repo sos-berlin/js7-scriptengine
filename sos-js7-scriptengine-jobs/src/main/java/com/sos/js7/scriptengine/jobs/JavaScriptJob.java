@@ -194,10 +194,15 @@ public class JavaScriptJob extends Job<JobArguments> {
         String p = step.getAllArgumentsAsNameValueMap().entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(JS7_GRAALVM_JS_OPTION)).map(e -> e
                 .getValue().toString()).findFirst().orElse(null);
 
+        String method = "getGraalJSScriptEngineOptions";
         Map<String, String> options = null;
         if (SOSString.isEmpty(p)) {
             String jh = SOSShell.getJavaHome();
-            if (!SOSString.isEmpty(jh)) {
+            if (SOSString.isEmpty(jh)) {
+                if (step.getLogger().isDebugEnabled()) {
+                    step.getLogger().debug(String.format("[%s][java.home]is empty", method));
+                }
+            } else {
                 Path np = null;
                 try {
                     np = Paths.get(jh).resolve("bin").resolve("node_modules");
@@ -205,11 +210,16 @@ public class JavaScriptJob extends Job<JobArguments> {
                         options = new HashMap<>();
                         options.put("js.commonjs-require", "true");
                         options.put("js.commonjs-require-cwd", np.toString());
+                        if (step.getLogger().isDebugEnabled()) {
+                            step.getLogger().debug(String.format("[%s]options=%s", method, options));
+                        }
                     } else {
-                        step.getLogger().debug(String.format("[setGraalJSScriptEngineOptions][JAVA_HOME=%s][%s]file not found", jh, np));
+                        if (step.getLogger().isDebugEnabled()) {
+                            step.getLogger().debug(String.format("[%s][java.home=%s][%s]node_modules not found", method, jh, np));
+                        }
                     }
                 } catch (Throwable e) {
-                    step.getLogger().warn(String.format("[setGraalJSScriptEngineOptions][JAVA_HOME=%s][%s]%s", jh, np, e.toString()));
+                    step.getLogger().warn(String.format("[%s][java.home=%s][%s]%s", method, jh, np, e.toString()), e);
                 }
             }
         } else {
@@ -219,8 +229,11 @@ public class JavaScriptJob extends Job<JobArguments> {
                 if (o != null && o.getOptions() != null) {
                     options = o.getOptions();
                 }
+                if (step.getLogger().isDebugEnabled()) {
+                    step.getLogger().debug(String.format("[%s][%s]options=%s", method, p, options));
+                }
             } else {
-                step.getLogger().warn(String.format("[setGraalJSScriptEngineOptions][%s=%s]file not found", JS7_GRAALVM_JS_OPTION, p));
+                step.getLogger().warn(String.format("[%s][%s=%s]file not found", method, JS7_GRAALVM_JS_OPTION, p));
             }
         }
         return options;

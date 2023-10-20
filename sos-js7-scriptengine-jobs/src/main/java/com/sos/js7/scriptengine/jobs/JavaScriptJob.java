@@ -60,6 +60,9 @@ public class JavaScriptJob extends Job<JobArguments> {
 
     public JavaScriptJob(JobContext jobContext) {
         super(jobContext);
+        if (jobContext != null) {
+            script = jobContext.asScala().executable().script();
+        }
     }
 
     @Override

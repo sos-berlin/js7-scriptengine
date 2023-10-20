@@ -60,9 +60,6 @@ public class JavaScriptJob extends Job<JobArguments> {
 
     public JavaScriptJob(JobContext jobContext) {
         super(jobContext);
-        if (jobContext != null) {// TODO to remove - check because of UNIT Tests
-            script = jobContext.asScala().executable().script();
-        }
     }
 
     @Override
@@ -109,7 +106,7 @@ public class JavaScriptJob extends Job<JobArguments> {
         }
 
         Map<String, Object> m = (Map) args;
-        List<JobArgument> l = new ArrayList<>();
+        List<JobArgument<?>> l = new ArrayList<>();
         List<ASOSArguments> included = new ArrayList<>();
         m.entrySet().stream().forEach(e -> {
             if (e.getKey().equals("includedArguments") && e.getValue() instanceof List) {

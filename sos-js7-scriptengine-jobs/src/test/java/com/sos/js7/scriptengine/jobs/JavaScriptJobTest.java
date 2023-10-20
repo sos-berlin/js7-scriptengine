@@ -92,7 +92,7 @@ public class JavaScriptJobTest {
         String script = SOSPath.readFile(Paths.get(file));
 
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new JavaScriptJob(null));
-        SOSReflection.setDeclaredFieldValue(h.getJobs(), "script", script);
+        SOSReflection.setDeclaredFieldValue(h.getJob(), "script", script);
         h.onStart(args);
 
         JOutcome.Completed result = h.processOrder(args);

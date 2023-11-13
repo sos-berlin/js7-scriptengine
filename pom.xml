@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.sos-berlin</groupId>
 	<artifactId>js7-scriptengine</artifactId>
-	<version>2.6.3</version>
+	<version>2.6.4-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>

@@ -27,9 +27,11 @@ import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.common.ASOSArguments;
-import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
-import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
+import com.sos.commons.util.arguments.base.ASOSArguments;
+import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
+import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
+import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -49,9 +51,17 @@ public class JavaScriptJob extends Job<JobArguments> {
     private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
     private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
 
-    private static final Map<String, String> INCLUDABLE_ARGUMENTS = Stream.of(new String[][] { { CredentialStoreArguments.CLASS_KEY,
-            CredentialStoreArguments.class.getName() }, { SSHProviderArguments.CLASS_KEY, SSHProviderArguments.class.getName() }, }).collect(
-                    Collectors.toMap(data -> data[0], data -> data[1]));
+    private static final Map<String, String> INCLUDABLE_ARGUMENTS = Stream.of(new String[][] {
+            // CredentialStore
+            { CredentialStoreArguments.CLASS_KEY, CredentialStoreArguments.class.getName() }
+            // Proxy
+            , { ProxyArguments.CLASS_KEY, ProxyArguments.class.getName() }
+            // Java KeyStore
+            , { JavaKeyStoreArguments.CLASS_KEY, JavaKeyStoreArguments.class.getName() }
+            // SSHProvider
+            , { SSHProviderArguments.CLASS_KEY, SSHProviderArguments.class.getName() }, })
+            // toMap
+            .collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
     private static volatile String BASIC_SCRIPT;
 

@@ -13,6 +13,8 @@ var js7 = {
 
 	IncludableArgument: {
 		CREDENTIAL_STORE: 'CREDENTIAL_STORE',
+		PROXY: 'PROXY',
+		JAVA_KEY_STORE: 'JAVA_KEY_STORE',
 		SSH_PROVIDER: 'SSH_PROVIDER'
 	},
 

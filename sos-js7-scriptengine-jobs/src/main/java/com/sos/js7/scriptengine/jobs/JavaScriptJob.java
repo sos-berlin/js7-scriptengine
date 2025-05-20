@@ -29,8 +29,8 @@ import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
-import com.sos.commons.util.arguments.impl.JavaKeyStoreArguments;
-import com.sos.commons.util.arguments.impl.ProxyArguments;
+import com.sos.commons.util.keystore.KeyStoreArguments;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
@@ -55,9 +55,9 @@ public class JavaScriptJob extends Job<JobArguments> {
             // CredentialStore
             { CredentialStoreArguments.CLASS_KEY, CredentialStoreArguments.class.getName() }
             // Proxy
-            , { ProxyArguments.CLASS_KEY, ProxyArguments.class.getName() }
+            , { ProxyConfigArguments.CLASS_KEY, ProxyConfigArguments.class.getName() }
             // Java KeyStore
-            , { JavaKeyStoreArguments.CLASS_KEY, JavaKeyStoreArguments.class.getName() }
+            , { KeyStoreArguments.CLASS_KEY, KeyStoreArguments.class.getName() }
             // SSHProvider
             , { SSHProviderArguments.CLASS_KEY, SSHProviderArguments.class.getName() }, })
             // toMap

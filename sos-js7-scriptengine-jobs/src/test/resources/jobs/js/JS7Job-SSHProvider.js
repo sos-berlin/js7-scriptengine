@@ -12,7 +12,7 @@ class JS7Job extends js7.Job {
 
 	processOrder(step) {
 		var ssha = step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER);
-		var sshProvider = new com.sos.commons.vfs.ssh.SSHProvider(ssha);
+		var sshProvider = com.sos.commons.vfs.ssh.SSHProvider.createInstance(step.getLogger(), ssha);
 
 		//log sshProvider public methods
 		//var lh = new LogHelper();

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "options" })
-public class GraalJSScriptEngineOptions {
+public class ScriptJobOptions {
 
     @JsonProperty("options")
     @JsonDeserialize(as = java.util.LinkedHashMap.class)

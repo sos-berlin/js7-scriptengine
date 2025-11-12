@@ -1,0 +1,27 @@
+import java
+SOSHibernateFactory = java.type("com.sos.commons.hibernate.SOSHibernateFactory")
+
+class JS7Job(js7.Job):
+    def __init__(self, jobEnvironment):
+       super().__init__(jobEnvironment)
+  
+    def processOrder(self, step):
+        sql = "select TEXT_VALUE from JOC_VARIABLES where NAME='version'"
+
+        factory = SOSHibernateFactory("src/test/resources/hibernate.cfg.xml")
+        session = None
+        try :
+            factory.build()
+
+            session = factory.openStatelessSession()
+            r = session.getSingleValueNativeQuery(sql)
+
+            step.getLogger().info(f"[{sql}]{r}")
+      
+        except Exception as e:
+            raise e 
+
+        finally:
+            if session is not None:
+                factory.close(session)
+       

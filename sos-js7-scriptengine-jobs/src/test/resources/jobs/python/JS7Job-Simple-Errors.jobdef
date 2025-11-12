@@ -1,0 +1,12 @@
+#import non_existing_module # polyglot GuestException
+
+class JS7Job(js7.Job):
+    def processOrder(self, step):
+        print("hello world")
+        #x = 1 / 0 # polyglot GuestException
+        
+        # syntax error without details
+        #a= 
+ 
+        # GuestException: NameError("name 'b' is not defined")
+        #a=b

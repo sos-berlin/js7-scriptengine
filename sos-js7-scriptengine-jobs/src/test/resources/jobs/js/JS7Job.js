@@ -1,11 +1,11 @@
 class JS7JobArguments {
-	my_arg1 = new js7.JobArgument("my_arg1", false,new java.io.File("x.txt"));
+	my_arg1 = new js7.JobArgument("my_arg1", false, new java.io.File("x.txt"));
 	my_arg2 = new js7.JobArgument("my_arg2", true, "x", js7.DisplayMode.UNMASKED);
-    my_arg3 = new js7.JobArgument("op_arg_final", false);
-    my_arg4 = new js7.JobArgument("op_arg_string", false);
-    my_arg5 = new js7.JobArgument("op_arg_numeric", false);
-    my_arg6 = new js7.JobArgument("op_arg_boolean", false);
-    my_arg7 = new js7.JobArgument("op_arg_list", false);
+	my_arg3 = new js7.JobArgument("op_arg_final", false);
+	my_arg4 = new js7.JobArgument("op_arg_string", false);
+	my_arg5 = new js7.JobArgument("op_arg_numeric", false);
+	my_arg6 = new js7.JobArgument("op_arg_boolean", false);
+	my_arg7 = new js7.JobArgument("op_arg_list", false);
 
 	//includedArguments = [js7.IncludableArgument.CREDENTIAL_STORE, js7.IncludableArgument.SSH_PROVIDER];
 }
@@ -50,6 +50,7 @@ class LogHelper {
 	}
 
 	logArguments(step) {
+		// map
 		step.getLogger().info("---------------All Arguments--");
 		var args = step.getAllArguments();
 		step.getLogger().info("getAllArguments:");
@@ -57,14 +58,12 @@ class LogHelper {
 			step.getLogger().info(" " + a + "=" + args[a]);
 		}
 
+		// object
 		step.getLogger().info("---------------Declared Arguments--");
 		args = step.getDeclaredArguments();
-		step.getLogger().info("getDeclaredArguments:");
-		step.getLogger().info(" " + args);
-		for (var a in args) {
-			step.getLogger().info(" " + a + "=" + args[a]);
-		}
+		step.getLogger().info("getDeclaredArguments: " + args);
 
+		// list
 		args = step.getAllDeclaredArguments();
 		step.getLogger().info("getAllDeclaredArguments:");
 		for (var a in args) {

@@ -1,7 +1,7 @@
 class JS7Job extends js7.Job {
 
 	processOrder(step) {
-		var apiExecutor = new com.sos.js7.job.jocapi.ApiExecutor(step.getLogger());
+		var apiExecutor = new com.sos.js7.job.jocapi.ApiExecutor(step);
 		var accessToken = null;
 		try {
 			accessToken = apiExecutor.login().getAccessToken();

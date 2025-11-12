@@ -1,0 +1,78 @@
+from pathlib import Path
+from java.io import File
+import re
+
+class JS7JobArguments:
+    def __init__(self):
+        self.my_arg1 = js7.JobArgument("my_arg1", False, Path("path.txt"))
+        self.my_arg2 = js7.JobArgument("my_arg2", False, File("file.txt"))
+        self.my_arg3 = js7.JobArgument("my_arg3", True, "my_arg3 default", js7.DisplayMode.UNMASKED)
+        self.my_arg4 = js7.JobArgument("op_arg_final", False)
+        self.my_arg5 = js7.JobArgument("op_arg_string", False)
+        self.my_arg6 = js7.JobArgument("op_arg_numeric_1", False, 1)
+        self.my_arg7 = js7.JobArgument("op_arg_numeric_2", False, 1.23)
+        self.my_arg8 = js7.JobArgument("op_arg_boolean", False)
+        self.my_arg9 = js7.JobArgument("op_arg_list", False)
+        self.my_arg10 = js7.JobArgument("op_arg_map", False)
+  
+        #self.includedArguments = [js7.IncludableArgument.CREDENTIAL_STORE, js7.IncludableArgument.SSH_PROVIDER]
+        
+        # dev tests - not for use
+        #self.my_arg9 = js7.JobArgument("op_arg_list_", False, ())
+        #self.my_arg10 = js7.JobArgument("op_arg_map_", False, {})
+        #self.my_arg11 = js7.JobArgument("op_arg_map_with_default", False, {'a':'b'})
+        #self.my_arg12 = js7.JobArgument("op_arg_set_with_default", False, {'a','b'})
+        
+  
+class JS7Job(js7.Job):
+    def __init__(self, jobEnvironment):
+        super().__init__(jobEnvironment, declaredArguments = JS7JobArguments())
+  
+    def processOrder(self, step):
+        step.getLogger().info("[onOrderProcess]Hallo from My Job")
+        step.getLogger().info(f"[onOrderProcess][getJobEnvironment]{self.getJobEnvironment()}")
+        step.getLogger().info(f"[onOrderProcess][getJobEnvironment.getSystemEncoding]{self.getJobEnvironment().getSystemEncoding()}")
+
+        da = step.getDeclaredArgument(self.declaredArguments.my_arg2.name)
+        step.getLogger().info(f"[onOrderProcess][declaredArgument={da.getName()}]{da.getValue()}")
+        step.getLogger().info(f"[onOrderProcess][declaredArgumentValue]{type(step.getDeclaredArgumentValue(self.declaredArguments.my_arg2.name))}")
+
+        lh = LogHelper()
+        lh.logPublicMethods(step.getLogger(), "self.getJobEnvironment()", self.getJobEnvironment())
+        lh.logPublicMethods(step.getLogger(), "step", step)
+        lh.logArguments(step)
+        
+        step.getOutcome().setReturnCode(100)
+        step.getOutcome().putVariable("var_1", "var_1_value")
+        #step.getOutcome().setFailed()
+
+class LogHelper:
+    def __init__(self):
+        self.regExp = re.compile(r"equals|toString|hashCode|getClass|notify|notifyAll|wait|^__.*")
+
+    def logPublicMethods(self, logger, title, o):
+        logger.info(f"---------------Public Methods {title}--")
+        pm = [m for m in dir(o) if callable(getattr(o, m)) and not self.regExp.search(m)]
+        for m in pm:
+            logger.info(f" {m}")
+
+    def logArguments(self, step):
+        logger = step.getLogger()
+        
+        #dict
+        logger.info("---------------All Arguments--")
+        args = step.getAllArguments()
+        logger.info("getAllArguments:")
+        for k, v in args.items():
+            logger.info(f" {k}={v}")
+
+	    # object
+        logger.info("---------------Declared Arguments--")
+        args = step.getDeclaredArguments()
+        logger.info(f"getDeclaredArguments: {args}")
+        
+        # list
+        args = step.getAllDeclaredArguments()
+        logger.info("getAllDeclaredArguments:")
+        for v in args:
+            logger.info(f" {v}")

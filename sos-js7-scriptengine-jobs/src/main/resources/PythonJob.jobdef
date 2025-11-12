@@ -1,0 +1,35 @@
+def getJS7Job(jobEnvironment):
+    return JS7Job(jobEnvironment)
+
+class js7:
+    class DisplayMode:
+        MASKED = "MASKED"
+        UNMASKED = "UNMASKED"
+        UNKNOWN = "UNKNOWN"
+
+    class IncludableArgument:
+        CREDENTIAL_STORE = "CREDENTIAL_STORE"
+        PROXY = "PROXY"
+        JAVA_KEY_STORE = "JAVA_KEY_STORE"
+        SSH_PROVIDER = "SSH_PROVIDER"
+
+    class JobArgument:
+        def __init__(self, name, required=False, defaultValue=None, displayMode=None):
+            self.name = name
+            self.required = required
+            self.defaultValue = defaultValue
+            self.displayMode = displayMode if displayMode is not None else js7.DisplayMode.UNMASKED
+
+    class Job:
+        def __init__(self, jobEnvironment, declaredArguments=None):
+            self.__jobEnvironment = jobEnvironment
+            self.declaredArguments = declaredArguments
+
+        def processOrder(self, _step):
+            pass
+
+        def getJobEnvironment(self):
+            return self.__jobEnvironment
+
+        def getDeclaredArguments(self):
+            return self.declaredArguments   

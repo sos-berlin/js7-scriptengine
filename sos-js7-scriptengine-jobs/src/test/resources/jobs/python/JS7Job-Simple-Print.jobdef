@@ -19,4 +19,5 @@ class JS7Job(js7.Job):
         
         variable="variable value"
         print(f"hello world with print - info - {variable}")
+        print("hello", "world", "with", f"print - info - {variable}", "multiple arguments")
         print('hello world with print - error', file=sys.stderr)

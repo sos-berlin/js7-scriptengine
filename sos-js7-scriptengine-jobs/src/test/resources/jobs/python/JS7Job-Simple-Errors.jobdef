@@ -1,4 +1,4 @@
-#import non_existing_module # polyglot GuestException
+import non_existing_module # polyglot GuestException
 
 class JS7Job(js7.Job):
     def processOrder(self, step):

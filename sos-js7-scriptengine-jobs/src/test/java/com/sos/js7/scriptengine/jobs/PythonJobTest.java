@@ -36,6 +36,18 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobSimpleErrors() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Simple-Errors.jobdef";
+
+        Map<String, Object> args = new HashMap<>();
+        // args.put("my_arg1", "xyz");
+        // args.put("my_arg2", "xyz");
+
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
     public void testJobWithCredentialStore() throws Exception {
         String file = "src/test/resources/jobs/python/JS7Job-CredentialStore.jobdef";
 

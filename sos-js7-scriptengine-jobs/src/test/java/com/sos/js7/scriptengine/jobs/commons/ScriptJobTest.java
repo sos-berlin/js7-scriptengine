@@ -39,7 +39,11 @@ public abstract class ScriptJobTest {
             h.onStart(args);
             started = true;
         } catch (Exception e) {
-            LOGGER.error("[onStart]" + e.toString(), new JobException("[onStart]" + e.toString(), e));
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = e.toString();
+            }
+            LOGGER.error("[onStart]" + msg, new JobException("[onStart]" + msg, e));
         }
         if (started) {
             JOutcome.Completed result = h.processOrder(args);

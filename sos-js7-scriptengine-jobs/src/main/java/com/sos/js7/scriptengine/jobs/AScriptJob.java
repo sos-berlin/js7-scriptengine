@@ -89,18 +89,18 @@ public abstract class AScriptJob extends Job<JobArguments> {
 
     @Override
     public void onStart() throws Exception {
-        JOB_DEFINITIONS.computeIfAbsent(language, lang -> loadResource(language, jobDefinitionResourceName));
+        JOB_DEFINITIONS.computeIfAbsent(language, lang -> loadResource(this, jobDefinitionResourceName));
 
         try (Context context = Context.newBuilder(language).allowAllAccess(true).build()) {
             try {
-                context.eval(language, getJobDefinition(language) + "\n" + script);
+                context.eval(language, getJobDefinition(this) + "\n" + script);
 
                 Value getJobFunc = context.getBindings(language).getMember(FUNCTION_NAME_GET_JOB);
                 Value job = getJobFunc.execute(getJobEnvironment());
 
                 setDeclaredArguments(job.invokeMember(JOB_METHOD_GET_DECLARED_ARGUMENTS));
             } catch (PolyglotException e) {
-                throw new ScriptJobException(language, getJobDefinitionLinesCount(language), e);
+                throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
             }
         }
     }
@@ -114,13 +114,13 @@ public abstract class AScriptJob extends Job<JobArguments> {
     public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
         try (Context context = createBuilder(step).build()) {
             try {
-                context.eval(language, getJobDefinition(language) + "\n" + script);
+                context.eval(language, getJobDefinition(this) + "\n" + script);
 
                 Value getJobFunc = context.getBindings(language).getMember(FUNCTION_NAME_GET_JOB);
                 Value job = getJobFunc.execute(getJobEnvironment());
                 job.invokeMember(JOB_METHOD_PROCESS_ORDER, step);
             } catch (PolyglotException e) {
-                throw new ScriptJobException(language, getJobDefinitionLinesCount(language), e);
+                throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
             }
         }
     }
@@ -285,10 +285,10 @@ public abstract class AScriptJob extends Job<JobArguments> {
         return options;
     }
 
-    private static String getJobDefinition(String language) throws Exception {
-        String script = JOB_DEFINITIONS.get(language);
+    private static String getJobDefinition(AScriptJob job) throws Exception {
+        String script = JOB_DEFINITIONS.get(job.language);
         if (script == null) {
-            throw new ScriptJobException(language, "job definition not loaded");
+            throw new ScriptJobException(job, "job definition not loaded");
         }
         return script;
     }
@@ -297,16 +297,16 @@ public abstract class AScriptJob extends Job<JobArguments> {
      * This count is used solely during exception handling to translate Polyglot line numbers into user-visible positions.
      * <p>
      * Although caching is possible, recomputing the value on demand is faster and simpler, given that the script is short (~40 lines). */
-    private static int getJobDefinitionLinesCount(String language) {
+    private static int getJobDefinitionLinesCount(AScriptJob job) {
         try {
-            String script = getJobDefinition(language);
+            String script = getJobDefinition(job);
             return (int) script.lines().count();
         } catch (Exception e) {
             return 0;
         }
     }
 
-    private static String loadResource(String language, String resourceName) {
+    private static String loadResource(AScriptJob job, String resourceName) {
         try (InputStream is = AScriptJob.class.getClassLoader().getResourceAsStream(resourceName)) {
             if (is == null) {
                 throw new IllegalArgumentException("[" + resourceName + "]resource not found");
@@ -315,7 +315,7 @@ public abstract class AScriptJob extends Job<JobArguments> {
                 return reader.lines().collect(Collectors.joining("\n"));
             }
         } catch (Exception e) {
-            throw new ScriptJobRunTimeException(language, "[" + resourceName + "][loading resource] " + e.toString(), e);
+            throw new ScriptJobRunTimeException(job, "[" + resourceName + "][loading resource] " + e.toString(), e);
         }
     }
 

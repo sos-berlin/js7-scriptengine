@@ -30,8 +30,8 @@ public class ScriptJobException extends SOSException {
 
         String polyglotMessage = e.getMessage();
         polyglotMessage = polyglotMessage == null ? "" : polyglotMessage;
-        if (e.isSyntaxError()) {
 
+        if (e.isSyntaxError()) {
             SourceSection section = e.getSourceLocation();
             if (section == null) {
                 message.append(polyglotMessage);
@@ -39,20 +39,23 @@ public class ScriptJobException extends SOSException {
                 CharSequence cs = section.getCharacters();
                 String details = cs == null ? "" : cs.toString().trim();
                 boolean detailsNotEmpty = !details.isEmpty();
+                // Python: IndentationError: ..., TabError: inconsistent use of tabs and spaces in indentation, ...
+                // with the exception of "SyntaxError:..." - since this is already clear - it is a syntax error
+                boolean hasPolyglotError = polyglotMessage.matches("^(?!Syntax)(\\w+)Error:.*");
 
                 message.append("[SyntaxError]");
-                if (detailsNotEmpty) {
+                if (detailsNotEmpty || hasPolyglotError) {
                     message.append("[");
                 }
                 message.append(getSourceSectionMessage(jobDefinitionLinesCount, section));
-                if (detailsNotEmpty) {
+                if (detailsNotEmpty || hasPolyglotError) {
                     message.append("]");
                 }
-                if (polyglotMessage.startsWith("IndentationError:")) { // Python
+                if (hasPolyglotError) {
                     if (detailsNotEmpty) {
                         message.append("[");
                     }
-                    message.append(getIndentationError(polyglotMessage));
+                    message.append(getPolyglotError(polyglotMessage));
                     if (detailsNotEmpty) {
                         message.append("]");
                     }
@@ -99,8 +102,8 @@ public class ScriptJobException extends SOSException {
      * 
      * @param polyglotMessage, e.g.: IndentationError: unindent does not match any outer indentation level (Unnamed, line 42)
      * @return */
-    private static String getIndentationError(String polyglotMessage) {
-        int indx = polyglotMessage.indexOf('(');
+    private static String getPolyglotError(String polyglotMessage) {
+        int indx = polyglotMessage.indexOf("(Unnamed,");
         if (indx > 0) {
             return polyglotMessage.substring(0, indx).trim();
         }

@@ -6,13 +6,13 @@ class JS7JobArguments {
 class JS7Job extends js7.Job {
 	declaredArguments = new JS7JobArguments();
 
-	processOrder(step) {
-		var csa = step.getIncludedArguments(js7.IncludableArgument.CREDENTIAL_STORE);
+	processOrder(js7Step) {
+		var csa = js7Step.getIncludedArguments(js7.IncludableArgument.CREDENTIAL_STORE);
 		if (csa.getFile().getValue() != null) {//credential_store_file,credential_store_entry_path etc arguments are set
 			var resolver = csa.newResolver();
 			var title = resolver.resolve("cs://@title");
 			var url = resolver.resolve("cs://@url");
-			step.getLogger().info("title=" + title + ", url=" + url);
+			js7Step.getLogger().info("title=" + title + ", url=" + url);
 		}
 	}
 }
@@ -23,7 +23,7 @@ class JS7Job extends js7.Job {
 */
 class JS7JobWithoutIncludedArguments extends js7.Job {
 
-	processOrder(step) {
+	processOrder(js7Step) {
 		var csa = new com.sos.commons.credentialstore.CredentialStoreArguments();
 		csa.setFile("database.kdbx");
 		csa.setPassword("password");
@@ -33,6 +33,6 @@ class JS7JobWithoutIncludedArguments extends js7.Job {
 		var resolver = csa.newResolver();
 		var title = resolver.resolve("cs://@title");
 		var url = resolver.resolve("cs://@url");
-		step.getLogger().info("title=" + title + ", url=" + url);
+		js7Step.getLogger().info("title=" + title + ", url=" + url);
 	}
 }

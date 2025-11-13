@@ -10,27 +10,27 @@ class JS7JobArguments {
 class JS7Job extends js7.Job {
 	declaredArguments = new JS7JobArguments();
 
-	processOrder(step) {
-		var ssha = step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER);
-		var sshProvider = com.sos.commons.vfs.ssh.SSHProvider.createInstance(step.getLogger(), ssha);
-
-		//log sshProvider public methods
-		//var lh = new LogHelper();
-		//lh.logPublicMethods(step.getLogger(), "sshProvider", sshProvider);
+	processOrder(js7Step) {
+		var args = js7Step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER);
+		var sshProvider = null;
+		
 		try {
+			sshProvider = com.sos.commons.vfs.ssh.SSHProvider.createInstance(js7Step.getLogger(), args);
+			//log sshProvider public methods
+			//var lh = new LogHelper();
+			//lh.logPublicMethods(js7Step.getLogger(), "sshProvider", sshProvider);
 			sshProvider.connect();
 
-			step.getLogger().info("[sshProvider.getServerInfo]" + sshProvider.getServerInfo());
-		}
-		catch (e) {
-			throw e;
+			js7Step.getLogger().info("[sshProvider.getServerInfo]" + sshProvider.getServerInfo());
 		}
 		finally {
-			sshProvider.disconnect();
+			if (sshProvider) {
+				sshProvider.disconnect();
+			}
 		}
-
 	}
 }
+
 
 /** with included credential store arguments 
  * 1 - activate includedArguments = [js7.IncludableArgument.SSH_PROVIDER, js7.IncludableArgument.CREDENTIAL_STORE]
@@ -40,9 +40,9 @@ class JS7Job extends js7.Job {
 class JS7JobWithIncludedCredentialStore extends js7.Job {
 	declaredArguments = new JS7JobArguments();
 
-	processOrder(step) {
-		var ssha = step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER);
-		var csa = step.getIncludedArguments(js7.IncludableArgument.CREDENTIAL_STORE);
+	processOrder(js7Step) {
+		var ssha = js7Step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER);
+		var csa = js7Step.getIncludedArguments(js7.IncludableArgument.CREDENTIAL_STORE);
 
 		var sshProvider = new com.sos.commons.vfs.ssh.SSHProvider(ssha, csa);
 		sshProvider.connect();

@@ -25,26 +25,27 @@ class JS7JobArguments:
         
   
 class JS7Job(js7.Job):
+    
     def __init__(self, jobEnvironment):
         super().__init__(jobEnvironment, declaredArguments = JS7JobArguments())
   
-    def processOrder(self, step):
-        step.getLogger().info("[onOrderProcess]Hallo from My Job")
-        step.getLogger().info(f"[onOrderProcess][getJobEnvironment]{self.getJobEnvironment()}")
-        step.getLogger().info(f"[onOrderProcess][getJobEnvironment.getSystemEncoding]{self.getJobEnvironment().getSystemEncoding()}")
+    def processOrder(self, js7Step):
+        js7Step.getLogger().info("[onOrderProcess]Hallo from My Job")
+        js7Step.getLogger().info(f"[onOrderProcess][getJobEnvironment]{self.getJobEnvironment()}")
+        js7Step.getLogger().info(f"[onOrderProcess][getJobEnvironment.getSystemEncoding]{self.getJobEnvironment().getSystemEncoding()}")
 
-        da = step.getDeclaredArgument(self.declaredArguments.my_arg2.name)
-        step.getLogger().info(f"[onOrderProcess][declaredArgument={da.getName()}]{da.getValue()}")
-        step.getLogger().info(f"[onOrderProcess][declaredArgumentValue]{type(step.getDeclaredArgumentValue(self.declaredArguments.my_arg2.name))}")
+        da = js7Step.getDeclaredArgument(self.declaredArguments.my_arg2.name)
+        js7Step.getLogger().info(f"[onOrderProcess][declaredArgument={da.getName()}]{da.getValue()}")
+        js7Step.getLogger().info(f"[onOrderProcess][declaredArgumentValue]{type(js7Step.getDeclaredArgumentValue(self.declaredArguments.my_arg2.name))}")
 
         lh = LogHelper()
-        lh.logPublicMethods(step.getLogger(), "self.getJobEnvironment()", self.getJobEnvironment())
-        lh.logPublicMethods(step.getLogger(), "step", step)
-        lh.logArguments(step)
+        lh.logPublicMethods(js7Step.getLogger(), "self.getJobEnvironment()", self.getJobEnvironment())
+        lh.logPublicMethods(js7Step.getLogger(), "js7Step", js7Step)
+        lh.logArguments(js7Step)
         
-        step.getOutcome().setReturnCode(100)
-        step.getOutcome().putVariable("var_1", "var_1_value")
-        #step.getOutcome().setFailed()
+        js7Step.getOutcome().setReturnCode(100)
+        js7Step.getOutcome().putVariable("var_1", "var_1_value")
+        #js7Step.getOutcome().setFailed()
 
 class LogHelper:
     def __init__(self):
@@ -56,23 +57,23 @@ class LogHelper:
         for m in pm:
             logger.info(f" {m}")
 
-    def logArguments(self, step):
-        logger = step.getLogger()
+    def logArguments(self, js7Step):
+        logger = js7Step.getLogger()
         
         #dict
         logger.info("---------------All Arguments--")
-        args = step.getAllArguments()
+        args = js7Step.getAllArguments()
         logger.info("getAllArguments:")
         for k, v in args.items():
             logger.info(f" {k}={v}")
 
 	    # object
         logger.info("---------------Declared Arguments--")
-        args = step.getDeclaredArguments()
+        args = js7Step.getDeclaredArguments()
         logger.info(f"getDeclaredArguments: {args}")
         
         # list
-        args = step.getAllDeclaredArguments()
+        args = js7Step.getAllDeclaredArguments()
         logger.info("getAllDeclaredArguments:")
         for v in args:
             logger.info(f" {v}")

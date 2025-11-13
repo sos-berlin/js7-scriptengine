@@ -6,20 +6,20 @@ class JS7JobArguments:
         self.includedArguments = [js7.IncludableArgument.SSH_PROVIDER]
 
 class JS7Job(js7.Job):
+    
     def __init__(self, jobEnvironment):
         super().__init__(jobEnvironment, declaredArguments = JS7JobArguments())
   
-    def processOrder(self, step):
-        ssha = step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER)
-        sshProvider = SSHProvider.createInstance(step.getLogger(), ssha);
-        
+    def processOrder(self, js7Step):
+        args = js7Step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER)        
+        ssh_provider = None
+                
         try:
-            sshProvider.connect()
-            step.getLogger().info(f"[sshProvider.getServerInfo] {sshProvider.getServerInfo()}");
-
-        except Exception as e:
-            raise e 
+            ssh_provider = SSHProvider.createInstance(js7Step.getLogger(), args)
+            ssh_provider.connect()
+            
+            js7Step.getLogger().info(f"[ssh_provider.getServerInfo] {ssh_provider.getServerInfo()}")
 
         finally:
-            sshProvider.disconnect()
+            ssh_provider and ssh_provider.disconnect()
  

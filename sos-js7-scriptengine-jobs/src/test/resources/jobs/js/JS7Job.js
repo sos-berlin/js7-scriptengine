@@ -13,24 +13,24 @@ class JS7JobArguments {
 class JS7Job extends js7.Job {
 	declaredArguments = new JS7JobArguments();
 
-	processOrder(step) {
-		step.getLogger().info("[onOrderProcess]Hallo from My Job");
-		step.getLogger().info("[onOrderProcess][getJobEnvironment]" + this.getJobEnvironment());
-		step.getLogger().info("[onOrderProcess][getJobEnvironment.getSystemEncoding]" + this.getJobEnvironment().getSystemEncoding());
+	processOrder(js7Step) {
+		js7Step.getLogger().info("[onOrderProcess]Hallo from My Job");
+		js7Step.getLogger().info("[onOrderProcess][getJobEnvironment]" + this.getJobEnvironment());
+		js7Step.getLogger().info("[onOrderProcess][getJobEnvironment.getSystemEncoding]" + this.getJobEnvironment().getSystemEncoding());
 
 		//java.lang.Thread.sleep(5*1000);
-		var da = step.getDeclaredArgument(this.declaredArguments.my_arg2.name);
-		step.getLogger().info("[onOrderProcess][declaredArgument=" + da.getName() + "]" + da.getValue());
-		step.getLogger().info("[onOrderProcess][declaredArgumentValue]" + (typeof step.getDeclaredArgumentValue(this.declaredArguments.my_arg2.name)));
+		var da = js7Step.getDeclaredArgument(this.declaredArguments.my_arg2.name);
+		js7Step.getLogger().info("[onOrderProcess][declaredArgument=" + da.getName() + "]" + da.getValue());
+		js7Step.getLogger().info("[onOrderProcess][declaredArgumentValue]" + (typeof js7Step.getDeclaredArgumentValue(this.declaredArguments.my_arg2.name)));
 
 		var lh = new LogHelper();
-		lh.logPublicMethods(step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());
-		lh.logPublicMethods(step.getLogger(), "step", step);
-		lh.logArguments(step);
+		lh.logPublicMethods(js7Step.getLogger(), "this.getJobEnvironment()", this.getJobEnvironment());
+		lh.logPublicMethods(js7Step.getLogger(), "js7Step", js7Step);
+		lh.logArguments(js7Step);
 
-		step.getOutcome().setReturnCode(100);
-		step.getOutcome().putVariable("var_1", "var_1_value");
-		//step.getOutcome().setFailed();
+		js7Step.getOutcome().setReturnCode(100);
+		js7Step.getOutcome().putVariable("var_1", "var_1_value");
+		//js7Step.getOutcome().setFailed();
 	}
 }
 
@@ -49,25 +49,25 @@ class LogHelper {
 		}
 	}
 
-	logArguments(step) {
+	logArguments(js7Step) {
 		// map
-		step.getLogger().info("---------------All Arguments--");
-		var args = step.getAllArguments();
-		step.getLogger().info("getAllArguments:");
+		js7Step.getLogger().info("---------------All Arguments--");
+		var args = js7Step.getAllArguments();
+		js7Step.getLogger().info("getAllArguments:");
 		for (var a in args) {
-			step.getLogger().info(" " + a + "=" + args[a]);
+			js7Step.getLogger().info(" " + a + "=" + args[a]);
 		}
 
 		// object
-		step.getLogger().info("---------------Declared Arguments--");
-		args = step.getDeclaredArguments();
-		step.getLogger().info("getDeclaredArguments: " + args);
+		js7Step.getLogger().info("---------------Declared Arguments--");
+		args = js7Step.getDeclaredArguments();
+		js7Step.getLogger().info("getDeclaredArguments: " + args);
 
 		// list
-		args = step.getAllDeclaredArguments();
-		step.getLogger().info("getAllDeclaredArguments:");
+		args = js7Step.getAllDeclaredArguments();
+		js7Step.getLogger().info("getAllDeclaredArguments:");
 		for (var a in args) {
-			step.getLogger().info(" " + args[a]);
+			js7Step.getLogger().info(" " + args[a]);
 		}
 	}
 }

@@ -2,27 +2,27 @@ import java
 ApiExecutor = java.type("com.sos.js7.job.jocapi.ApiExecutor")
 
 class JS7Job(js7.Job):
-    def __init__(self, jobEnvironment):
-        super().__init__(jobEnvironment)
-  
-    def processOrder(self, step):
-        apiExecutor = ApiExecutor(step)
-        accessToken = None
+    
+    def processOrder(self, js7Step):
+        api_executor = ApiExecutor(js7Step)
+        access_token = None
         
         try:
-            accessToken = apiExecutor.login().getAccessToken()
-            step.getLogger().info(f"[accessToken] {accessToken}")
+            access_token = api_executor.login().getAccessToken()
+            js7Step.getLogger().info(f"[access_token] {access_token}")
 
-            controllerId = step.getControllerId()
-            body = f'{{"controllerId":"{controllerId}"}}'
-            response = apiExecutor.post(accessToken, "/monitoring/controllers", body)
+            controller_id = js7Step.getControllerId()
+            body = f'{{"controllerId":"{controller_id}"}}'
+            response = api_executor.post(access_token, "/monitoring/controllers", body)
 
-            step.getLogger().info(f"[response.getResponseBody] {response.getResponseBody()}")
-
-        except Exception as e:
-            raise e 
-
+            js7Step.getLogger().info(f"[response.getResponseBody] {response.getResponseBody()}")
+       
         finally:
-            apiExecutor.logout(accessToken)
-            apiExecutor.close()
+            if access_token is not None:
+                try:
+                    api_executor.logout(access_token)
+                except Exception as e:
+                    js7Step.getLogger().error(f"[logout failed] {e}")
+                
+            api_executor.close()
       

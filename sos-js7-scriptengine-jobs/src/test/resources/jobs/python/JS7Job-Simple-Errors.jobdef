@@ -1,7 +1,8 @@
 #import non_existing_module # Polyglot GuestException
 
 class JS7Job(js7.Job):
-    def processOrder(self, step):
+    
+    def processOrder(self, js7Step):
         print("hello world")
         
         # Polyglot GuestException: ZeroDivisionError: division by zero

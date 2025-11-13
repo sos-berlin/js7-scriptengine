@@ -1,23 +1,25 @@
 class JS7Job extends js7.Job {
 
-	processOrder(step) {
-		var apiExecutor = new com.sos.js7.job.jocapi.ApiExecutor(step);
+	processOrder(js7Step) {
+		var apiExecutor = new com.sos.js7.job.jocapi.ApiExecutor(js7Step);
 		var accessToken = null;
 		try {
 			accessToken = apiExecutor.login().getAccessToken();
-			step.getLogger().info("[accessToken]" + accessToken);
+			js7Step.getLogger().info("[accessToken]" + accessToken);
 
-			var response = apiExecutor.post(accessToken, "/monitoring/controllers", '{"controllerId":"' + step.getControllerId() + '"}');
-			step.getLogger().info("[response.getResponseBody]" + response.getResponseBody());
-		}
-		catch (e) {
-			throw e;
+			var response = apiExecutor.post(accessToken, "/monitoring/controllers", '{"controllerId":"' + js7Step.getControllerId() + '"}');
+			js7Step.getLogger().info("[response.getResponseBody]" + response.getResponseBody());
 		}
 		finally {
-			apiExecutor.logout(accessToken);
+			if (accessToken) {
+				try {
+					apiExecutor.logout(accessToken);
+				} catch (e) {
+					js7Step.getLogger().error(`[logout failed] ${e}`);
+				}
+			}
 			apiExecutor.close();
 		}
-
 	}
 }
 

@@ -45,7 +45,7 @@ public class PythonJobTest extends ScriptJobTest {
 
         execute(new PythonJob(null), file, args);
     }
-    
+
     @Ignore
     @Test
     public void testJobSimpleErrors() throws Exception {
@@ -95,7 +95,7 @@ public class PythonJobTest extends ScriptJobTest {
         execute(new PythonJob(null), file, args);
     }
 
-    // @Ignore
+    @Ignore
     @Test
     public void testJobWithSOSHibernate() throws Exception {
         String file = "src/test/resources/jobs/python/JS7Job-SOSHibernate.jobdef";

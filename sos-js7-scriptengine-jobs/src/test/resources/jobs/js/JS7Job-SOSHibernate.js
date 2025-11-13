@@ -1,25 +1,24 @@
 class JS7Job extends js7.Job {
 
-	processOrder(step) {
+	processOrder(js7Step) {
 		var sql = "select TEXT_VALUE from JOC_VARIABLES where NAME='version'";
 
-		var factory = new com.sos.commons.hibernate.SOSHibernateFactory("src/test/resources/hibernate.cfg.xml");
+		var factory = null;
 		var session = null;
 		try {
+			factory = new com.sos.commons.hibernate.SOSHibernateFactory("src/test/resources/hibernate.cfg.xml");
 			factory.build();
 
 			session = factory.openStatelessSession();
-			var r = session.getSingleValueNativeQuery(sql);
+			var result = session.getSingleValueNativeQuery(sql);
 
-			step.getLogger().info("[" + sql + "]" + r);
-		}
-		catch (e) {
-			throw e;
+			js7Step.getLogger().info("[" + sql + "]" + result);
 		}
 		finally {
-			factory.close(session);
+			if (factory) {
+				factory.close(session);
+			}
 		}
-
 	}
 }
 

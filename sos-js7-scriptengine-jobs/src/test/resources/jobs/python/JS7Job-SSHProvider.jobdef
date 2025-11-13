@@ -2,6 +2,8 @@ import java
 SSHProvider = java.type("com.sos.commons.vfs.ssh.SSHProvider")
 
 class JS7JobArguments:
+    """Job arguments definition. Include SSH Provider arguments."""
+     
     def __init__(self):
         self.includedArguments = [js7.IncludableArgument.SSH_PROVIDER]
 

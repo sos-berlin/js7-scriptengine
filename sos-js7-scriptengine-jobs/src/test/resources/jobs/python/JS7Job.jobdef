@@ -3,6 +3,8 @@ from java.io import File
 import re
 
 class JS7JobArguments:
+    """Job arguments definition."""
+    
     def __init__(self):
         self.my_arg1 = js7.JobArgument("my_arg1", False, Path("path.txt"))
         self.my_arg2 = js7.JobArgument("my_arg2", False, File("file.txt"))
@@ -25,6 +27,7 @@ class JS7JobArguments:
         
   
 class JS7Job(js7.Job):
+    """Job definition."""
     
     def __init__(self, jobEnvironment):
         super().__init__(jobEnvironment, declaredArguments = JS7JobArguments())
@@ -48,6 +51,8 @@ class JS7Job(js7.Job):
         #js7Step.getOutcome().setFailed()
 
 class LogHelper:
+    """Log Helper."""
+    
     def __init__(self):
         self.regExp = re.compile(r"equals|toString|hashCode|getClass|notify|notifyAll|wait|^__.*")
 

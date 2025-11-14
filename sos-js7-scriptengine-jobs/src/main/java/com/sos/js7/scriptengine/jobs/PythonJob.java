@@ -8,7 +8,7 @@ import org.graalvm.polyglot.Value;
 
 import com.sos.js7.job.JobArgument;
 
-public class PythonJob extends AScriptJob {
+public class PythonJob extends ScriptJob {
 
     private static final String LANGUAGE = "python";
     private static final String JOB_DEFINITION_RESOURCE_NAME = PythonJob.class.getSimpleName() + ".jobdef";

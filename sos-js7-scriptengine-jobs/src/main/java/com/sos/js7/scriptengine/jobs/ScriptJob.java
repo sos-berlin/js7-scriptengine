@@ -35,7 +35,7 @@ import com.sos.js7.scriptengine.jobs.exceptions.ScriptJobException;
 import com.sos.js7.scriptengine.jobs.exceptions.ScriptJobRunTimeException;
 import com.sos.js7.scriptengine.json.ScriptJobOptions;
 
-public abstract class AScriptJob extends Job<JobArguments> {
+public abstract class ScriptJob extends Job<JobArguments> {
 
     private static final Map<String, String> JOB_DEFINITIONS = new ConcurrentHashMap<>();
 
@@ -74,7 +74,7 @@ public abstract class AScriptJob extends Job<JobArguments> {
         }
     }
 
-    public AScriptJob(JobContext jobContext, String language, String jobDefinitionResourceName) {
+    public ScriptJob(JobContext jobContext, String language, String jobDefinitionResourceName) {
         super(jobContext);
 
         if (jobContext != null) {
@@ -285,7 +285,7 @@ public abstract class AScriptJob extends Job<JobArguments> {
         return options;
     }
 
-    private static String getJobDefinition(AScriptJob job) throws Exception {
+    private static String getJobDefinition(ScriptJob job) throws Exception {
         String script = JOB_DEFINITIONS.get(job.language);
         if (script == null) {
             throw new ScriptJobException(job, "job definition not loaded");
@@ -297,7 +297,7 @@ public abstract class AScriptJob extends Job<JobArguments> {
      * This count is used solely during exception handling to translate Polyglot line numbers into user-visible positions.
      * <p>
      * Although caching is possible, recomputing the value on demand is faster and simpler, given that the script is short (~40 lines). */
-    private static int getJobDefinitionLinesCount(AScriptJob job) {
+    private static int getJobDefinitionLinesCount(ScriptJob job) {
         try {
             String script = getJobDefinition(job);
             return (int) script.lines().count();
@@ -306,8 +306,8 @@ public abstract class AScriptJob extends Job<JobArguments> {
         }
     }
 
-    private static String loadResource(AScriptJob job, String resourceName) {
-        try (InputStream is = AScriptJob.class.getClassLoader().getResourceAsStream(resourceName)) {
+    private static String loadResource(ScriptJob job, String resourceName) {
+        try (InputStream is = ScriptJob.class.getClassLoader().getResourceAsStream(resourceName)) {
             if (is == null) {
                 throw new IllegalArgumentException("[" + resourceName + "]resource not found");
             }

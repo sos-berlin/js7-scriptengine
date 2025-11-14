@@ -4,7 +4,7 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.SourceSection;
 
 import com.sos.commons.exception.SOSException;
-import com.sos.js7.scriptengine.jobs.AScriptJob;
+import com.sos.js7.scriptengine.jobs.ScriptJob;
 
 public class ScriptJobException extends SOSException {
 
@@ -12,7 +12,7 @@ public class ScriptJobException extends SOSException {
 
     private StringBuilder message = null;
 
-    public ScriptJobException(AScriptJob job, String message) {
+    public ScriptJobException(ScriptJob job, String message) {
         this.message = new StringBuilder();
         this.message.append("[").append(job.getClass().getSimpleName()).append("]");
         if (message != null) {
@@ -20,12 +20,12 @@ public class ScriptJobException extends SOSException {
         }
     }
 
-    public ScriptJobException(AScriptJob job, String message, Exception e) {
+    public ScriptJobException(ScriptJob job, String message, Exception e) {
         this(job, message);
         this.initCause(e);
     }
 
-    public ScriptJobException(AScriptJob job, int jobDefinitionLinesCount, PolyglotException e) {
+    public ScriptJobException(ScriptJob job, int jobDefinitionLinesCount, PolyglotException e) {
         this(job, null, e);
 
         String polyglotMessage = e.getMessage();

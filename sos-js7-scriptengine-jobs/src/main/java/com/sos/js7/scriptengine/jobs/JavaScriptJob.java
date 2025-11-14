@@ -6,7 +6,7 @@ import org.graalvm.polyglot.Value;
 
 import com.sos.js7.job.JobArgument;
 
-public class JavaScriptJob extends AScriptJob {
+public class JavaScriptJob extends ScriptJob {
 
     private static final String LANGUAGE = "js";
     private static final String JOB_DEFINITION_RESOURCE_NAME = JavaScriptJob.class.getSimpleName() + ".jobdef";

@@ -11,14 +11,18 @@ class JS7Job extends js7.Job {
 			js7Step.getLogger().info("[response.getResponseBody]" + response.getResponseBody());
 		}
 		finally {
-			if (accessToken) {
-				try {
-					apiExecutor.logout(accessToken);
-				} catch (e) {
-					js7Step.getLogger().error(`[logout failed] ${e}`);
-				}
-			}
-			apiExecutor.close();
+			//  1) with logout exception handling
+			//if (accessToken) {
+			//	try {
+			//		apiExecutor.logout(accessToken);
+			//	} catch (e) {
+			//		js7Step.getLogger().error(`[logout failed] ${e}`);
+			//	}
+			//}
+			//apiExecutor.close();
+
+			// 2) a possible logout exception is not thrown, but logged internally at error level    
+			apiExecutor.closeQuietly(accessToken)
 		}
 	}
 }

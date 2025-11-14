@@ -18,11 +18,14 @@ class JS7Job(js7.Job):
             js7Step.getLogger().info(f"[response.getResponseBody] {response.getResponseBody()}")
        
         finally:
-            if access_token is not None:
-                try:
-                    api_executor.logout(access_token)
-                except Exception as e:
-                    js7Step.getLogger().error(f"[logout failed] {e}")
-                
-            api_executor.close()
+            # 1) with logout exception handling
+            #if access_token is not None:
+            #    try:
+            #        api_executor.logout(access_token)
+            #    except Exception as e:
+            #        js7Step.getLogger().error(f"[logout failed] {e}")
+            #api_executor.close()
+            
+            # 2) a possible logout exception is not thrown, but logged internally at error level    
+            api_executor.closeQuietly(access_token)
       

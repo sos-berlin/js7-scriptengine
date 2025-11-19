@@ -23,9 +23,12 @@ class js7:
     class Job:
         def __init__(self):
             self.jobEnvironment = None
-            self.declaredArguments = declaredArguments
+            self.declaredArguments = None
 
         def processOrder(self, js7Step):
+            pass
+
+        def onProcessOrderCanceled(self, js7Step):
             pass
 
         def setJobEnvironment(self, js7JobEnvironment):

@@ -37,14 +37,19 @@ import com.sos.js7.scriptengine.json.ScriptJobOptions;
 
 public abstract class ScriptJob extends Job<JobArguments> {
 
+    /** Basic JS7 Job definitions (a maximum of 2 definitions are loaded)<br/>
+     * - js: resources/JavaScriptJob.jobdef<br/>
+     * - python: resources/PythonJob.jobdef */
     private static final Map<String, String> JOB_DEFINITIONS = new ConcurrentHashMap<>();
 
-    /** JOB_OPTION_NAME_PREFIX + language: js7_options.graalvm.js|js7_options.graalvm.python */
+    /** JOB_OPTION_NAME_PREFIX + language: js7_options.graalvm.js | js7_options.graalvm.python */
     private static final String JOB_OPTION_NAME_PREFIX = "js7_options.graalvm.";
 
     private static final String POLYGLOT_WARN_PROPERTY_NAME = "polyglot.engine.WarnInterpreterOnly";
 
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
+
+    private static final String JOB_METHOD_SET_JOB_ENVIRONMENT = "setJobEnvironment";
     private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
     private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
 
@@ -61,11 +66,10 @@ public abstract class ScriptJob extends Job<JobArguments> {
             .collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
     private final String language;
-    private final String jobDefinitionResourceName;
-    private final String jobOptionName;
 
     private String script;
-    private JobArguments declaredArguments;
+    private volatile JobArguments declaredArguments;
+    private final Object declaredArgumentsLock = new Object();
 
     static {
         String warnProperty = System.getProperty(POLYGLOT_WARN_PROPERTY_NAME);
@@ -81,43 +85,63 @@ public abstract class ScriptJob extends Job<JobArguments> {
             script = jobContext.asScala().executable().script();
         }
         this.language = language;
-        this.jobDefinitionResourceName = jobDefinitionResourceName;
-        this.jobOptionName = JOB_OPTION_NAME_PREFIX + language;
+        JOB_DEFINITIONS.computeIfAbsent(language, lang -> loadResource(this, jobDefinitionResourceName));
     }
 
     protected abstract Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Value value);
 
     @Override
-    public void onStart() throws Exception {
-        JOB_DEFINITIONS.computeIfAbsent(language, lang -> loadResource(this, jobDefinitionResourceName));
+    /** @apiNote The {@code declaredArguments} are set using {@link Job#beforeCreateJobArguments(List, OrderProcessStep)} instead of {@link Job#onStart()}
+     *          because, for successful script evaluation, it may be necessary to provide certain Polyglot context options.<br/>
+     *          For example, if the script imports JavaScript or Python modules defined in the script header rather than in the processOrder,<br/>
+     *          these options need to be available.<br/>
+     *          The {@code onStart} method does not support reading from JobResources or handling argument priorities such as {@code lastSucceededOutcome} or
+     *          {@code order}. */
+    public JobArguments beforeCreateJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<JobArguments> step) throws Exception {
+        if (declaredArguments == null) {
+            // Thread-safety is ensured using a private lock (declaredArgumentsLock) rather than {this},
+            // preventing external code or subclasses from interfering and isolating synchronization to this initialization.
+            synchronized (declaredArgumentsLock) {
+                if (declaredArguments == null) {
+                    String optionsName = JOB_OPTION_NAME_PREFIX + language;
+                    String optionsValue = (String) step.getPreAssignedArgumentValue(optionsName);
+                    Map<String, String> options = getJobOptions(step, optionsName, optionsValue);
+                    JobArgument<Map<String, String>> optionsArg = new JobArgument<>(optionsName, false);
+                    optionsArg.setValue(options);
 
-        try (Context context = Context.newBuilder(language).allowAllAccess(true).build()) {
-            try {
-                context.eval(language, getJobDefinition(this) + "\n" + script);
-
-                Value getJobFunc = context.getBindings(language).getMember(FUNCTION_NAME_GET_JOB);
-                Value job = getJobFunc.execute(getJobEnvironment());
-
-                setDeclaredArguments(job.invokeMember(JOB_METHOD_GET_DECLARED_ARGUMENTS));
-            } catch (PolyglotException e) {
-                throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
+                    try (Context context = createBuilder(step, options).build()) {
+                        try {
+                            Value job = createJobFromScript(context);
+                            // Retrieve Job declaredArguments
+                            setDeclaredArguments(optionsArg, job.invokeMember(JOB_METHOD_GET_DECLARED_ARGUMENTS));
+                        } catch (PolyglotException e) {
+                            throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
+                        }
+                    }
+                }
             }
         }
-    }
-
-    @Override
-    public JobArguments onCreateJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<JobArguments> step) {
         return declaredArguments;
     }
 
     @Override
     public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
-        try (Context context = createBuilder(step).build()) {
-            try {
-                context.eval(language, getJobDefinition(this) + "\n" + script);
+        String optionsName = JOB_OPTION_NAME_PREFIX + language;
 
-                Value getJobFunc = context.getBindings(language).getMember(FUNCTION_NAME_GET_JOB);
-                Value job = getJobFunc.execute(getJobEnvironment());
+        Map<String, String> options = null;
+        JobArgument<?> optionsArg = step.getAllArguments().entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(optionsName)).map(e -> e
+                .getValue()).findFirst().orElse(null);
+
+        if (optionsArg != null) {
+            String optionsValue = (String) optionsArg.getValue();
+            options = getJobOptions(step, optionsName, optionsValue);
+            optionsArg.applyValue(options);
+        }
+        Builder builder = createBuilder(step, options);
+        try (Context context = builder.build()) {
+            try {
+                Value job = createJobFromScript(context);
+                // Call job processOrder
                 job.invokeMember(JOB_METHOD_PROCESS_ORDER, step);
             } catch (PolyglotException e) {
                 throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
@@ -135,19 +159,28 @@ public abstract class ScriptJob extends Job<JobArguments> {
 
     // }
 
-    private Builder createBuilder(OrderProcessStep<JobArguments> step) throws Exception {
-        // .allowIO(IOAccess.ALL)
+    private Builder createBuilder(OrderProcessStep<JobArguments> step, Map<String, String> options) throws Exception {
         Builder builder = Context.newBuilder(language).allowAllAccess(true).allowHostAccess(HostAccess.ALL).allowHostClassLookup(className -> true)
                 .allowExperimentalOptions(true);
-
-        Map<String, String> options = getJobOptions(step);
         if (options != null) {
             builder.options(options);
         }
         return builder;
     }
 
-    private void setDeclaredArguments(Value declaredArgs) throws Exception {
+    private Value createJobFromScript(Context context) throws Exception {
+        context.eval(language, getJobDefinition(this) + "\n" + script);
+
+        Value getJobFunc = context.getBindings(language).getMember(FUNCTION_NAME_GET_JOB);
+        // Instantiate Job (empty constructor)
+        Value job = getJobFunc.execute();
+
+        // Set Job JobEnvironment
+        job.invokeMember(JOB_METHOD_SET_JOB_ENVIRONMENT, getJobEnvironment());
+        return job;
+    }
+
+    private void setDeclaredArguments(JobArgument<Map<String, String>> optionsArg, Value declaredArgs) throws Exception {
         List<JobArgument<?>> declared = new ArrayList<>();
         List<ASOSArguments> included = new ArrayList<>();
         if (declaredArgs.hasMembers()) {
@@ -202,6 +235,11 @@ public abstract class ScriptJob extends Job<JobArguments> {
                 }
             }
         }
+
+        if (optionsArg != null) {
+            declared.add(optionsArg);
+        }
+
         declaredArguments = new JobArguments(included.toArray(ASOSArguments[]::new));
         declaredArguments.setDynamicArgumentFields(declared);
     }
@@ -249,36 +287,32 @@ public abstract class ScriptJob extends Job<JobArguments> {
         return defaultValue;
     }
 
-    private Map<String, String> getJobOptions(OrderProcessStep<JobArguments> step) throws Exception {
-        String value = step.getAllArgumentsAsNameValueMap().entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(jobOptionName)).map(e -> e
-                .getValue().toString()).findFirst().orElse(null);
+    private Map<String, String> getJobOptions(OrderProcessStep<JobArguments> step, String optionsName, String optionsValue) throws Exception {
+        if (optionsValue == null) {
+            return null;
+        }
 
         Map<String, String> options = null;
-        if (value != null) {
-            String method = "getJobOptions";
-            if (value.startsWith("{")) {
-                ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(value, ScriptJobOptions.class);
+        String method = "getJobOptions";
+        if (optionsValue.startsWith("{")) {
+            ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(optionsValue, ScriptJobOptions.class);
+            if (o != null && o.getOptions() != null) {
+                options = o.getOptions();
+            }
+            // options value logged by the Job API at DEBUG level: All Resulting Arguments
+        } else {
+            File f = new File(optionsValue);
+            if (f.exists()) {
+                ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(f, ScriptJobOptions.class);
                 if (o != null && o.getOptions() != null) {
                     options = o.getOptions();
                 }
-
                 if (step.getLogger().isDebugEnabled()) {
-                    step.getLogger().debug(String.format("[%s][%s]options=%s", method, value, options));
+                    step.getLogger().debug(String.format("[%s][%s]%s", method, optionsName, options));
                 }
             } else {
-                File f = new File(value);
-                if (f.exists()) {
-                    ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(f, ScriptJobOptions.class);
-                    if (o != null && o.getOptions() != null) {
-                        options = o.getOptions();
-                    }
-                    if (step.getLogger().isDebugEnabled()) {
-                        step.getLogger().debug(String.format("[%s][%s]options=%s", method, value, options));
-                    }
-                } else {
-                    if (step.getLogger().isDebugEnabled()) {
-                        step.getLogger().debug(String.format("[%s][%s=%s]file not found", method, jobOptionName, value));
-                    }
+                if (step.getLogger().isDebugEnabled()) {
+                    step.getLogger().debug(String.format("[%s][%s=%s]file not found", method, optionsName, optionsValue));
                 }
             }
         }

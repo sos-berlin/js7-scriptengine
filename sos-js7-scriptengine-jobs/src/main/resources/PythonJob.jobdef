@@ -1,5 +1,5 @@
-def getJS7Job(jobEnvironment):
-    return JS7Job(jobEnvironment)
+def getJS7Job():
+    return JS7Job()
 
 class js7:
     class DisplayMode:
@@ -21,15 +21,18 @@ class js7:
             self.displayMode = displayMode if displayMode is not None else js7.DisplayMode.UNMASKED
 
     class Job:
-        def __init__(self, jobEnvironment, declaredArguments=None):
-            self.__jobEnvironment = jobEnvironment
+        def __init__(self):
+            self.jobEnvironment = None
             self.declaredArguments = declaredArguments
 
-        def processOrder(self, _step):
+        def processOrder(self, js7Step):
             pass
 
+        def setJobEnvironment(self, js7JobEnvironment):
+            self.jobEnvironment=js7JobEnvironment
+            
         def getJobEnvironment(self):
-            return self.__jobEnvironment
+            return self.jobEnvironment
 
         def getDeclaredArguments(self):
             return self.declaredArguments   

@@ -4,6 +4,7 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.SourceSection;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.util.SOSString;
 import com.sos.js7.scriptengine.jobs.ScriptJob;
 
 public class ScriptJobException extends SOSException {
@@ -38,31 +39,12 @@ public class ScriptJobException extends SOSException {
             } else {
                 CharSequence cs = section.getCharacters();
                 String details = cs == null ? "" : cs.toString().trim();
-                boolean detailsNotEmpty = !details.isEmpty();
-                // Python: IndentationError: ..., TabError: inconsistent use of tabs and spaces in indentation, ...
-                // with the exception of "SyntaxError:..." - since this is already clear - it is a syntax error
-                boolean hasPolyglotError = polyglotMessage.matches("^(?!Syntax)(\\w+)Error:.*");
 
-                message.append("[SyntaxError]");
-                if (detailsNotEmpty || hasPolyglotError) {
-                    message.append("[");
+                message.append("[").append(getSourceSectionMessage(jobDefinitionLinesCount, section)).append("]");
+                if (!SOSString.isEmpty(details)) {
+                    message.append("[").append(details).append("]");
                 }
-                message.append(getSourceSectionMessage(jobDefinitionLinesCount, section));
-                if (detailsNotEmpty || hasPolyglotError) {
-                    message.append("]");
-                }
-                if (hasPolyglotError) {
-                    if (detailsNotEmpty) {
-                        message.append("[");
-                    }
-                    message.append(getPolyglotError(polyglotMessage));
-                    if (detailsNotEmpty) {
-                        message.append("]");
-                    }
-                }
-                if (detailsNotEmpty) {
-                    message.append(details);
-                }
+                message.append(getPolyglotError(polyglotMessage));
             }
         } else if (e.isGuestException()) { // runtime error, e.g. Python ModuleNotFoundError
             // String type = e.getGuestObject().getMetaObject().getMetaSimpleName();
@@ -129,9 +111,7 @@ public class ScriptJobException extends SOSException {
 
     @Override
     public String toString() {
-        String result = super.toString();
-
-        return result;
+        return super.toString();
     }
 
 }

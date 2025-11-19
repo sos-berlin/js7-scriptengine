@@ -9,8 +9,8 @@ class JS7JobArguments:
 
 class JS7Job(js7.Job):
     
-    def __init__(self, jobEnvironment):
-        super().__init__(jobEnvironment, declaredArguments = JS7JobArguments())
+    def __init__(self):
+        self.declaredArguments = JS7JobArguments()
   
     def processOrder(self, js7Step):
         args = js7Step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER)        

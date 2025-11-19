@@ -1,0 +1,6 @@
+{
+	"_comment": "See https://www.graalvm.org/python/docs/#python-context-options",
+	"options": {
+		"python.PythonPath": "/var/sos-berlin.com/js7/agent/python_modules;D:/Programme/Python/3.13.9/Lib/site-packages"
+	}
+}

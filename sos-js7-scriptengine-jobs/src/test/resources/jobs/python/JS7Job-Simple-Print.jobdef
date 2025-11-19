@@ -1,7 +1,7 @@
 class JS7Job(js7.Job):
     
     def processOrder(self, js7Step):
-        js7Step.getLogger().info('hello world with js7Step logger')
+        js7Step.getLogger().info("hello world with js7Step logger")
         
 		# var 1 - info, error
         #import sys

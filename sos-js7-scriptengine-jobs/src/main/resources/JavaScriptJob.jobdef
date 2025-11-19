@@ -1,5 +1,5 @@
-function getJS7Job(jobEnvironment) {
-	return new JS7Job(jobEnvironment);
+function getJS7Job() {
+	return new JS7Job();
 }
 
 var js7 = {
@@ -37,11 +37,14 @@ var js7 = {
 		#jobEnvironment;
 		declaredArguments;
 
-		constructor(jobEnvironment) {
-			this.#jobEnvironment = jobEnvironment;
+		constructor() {
 		}
 
-		processOrder(_step) { }
+		processOrder(js7Step) { }
+
+        setJobEnvironment(js7JobEnvironment) {
+			this.#jobEnvironment = js7JobEnvironment;
+		}
 
 		getJobEnvironment() {
 			return this.#jobEnvironment;

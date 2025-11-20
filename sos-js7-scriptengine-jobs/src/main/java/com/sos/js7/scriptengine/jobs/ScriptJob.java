@@ -49,9 +49,12 @@ public abstract class ScriptJob extends Job<JobArguments> {
 
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
 
+    private static final String JOB_PROPERY_DECLARED_ARGUMENTS = "declaredArguments";
+
     private static final String JOB_METHOD_SET_JOB_ENVIRONMENT = "setJobEnvironment";
     private static final String JOB_METHOD_GET_DECLARED_ARGUMENTS = "getDeclaredArguments";
     private static final String JOB_METHOD_PROCESS_ORDER = "processOrder";
+    private static final String JOB_METHOD_ON_PROCESS_ORDER_CANCELED = "onProcessOrderCanceled";
 
     private static final Map<String, String> INCLUDABLE_ARGUMENTS = Stream.of(new String[][] {
             // CredentialStore
@@ -90,6 +93,9 @@ public abstract class ScriptJob extends Job<JobArguments> {
 
     protected abstract Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Value value);
 
+    /** @apiNote currently not used */
+    protected abstract Boolean isMethodOverridden(Value job, String methodName);
+
     @Override
     /** @apiNote The {@code declaredArguments} are set using {@link Job#beforeCreateJobArguments(List, OrderProcessStep)} instead of {@link Job#onStart()}
      *          because, for successful script evaluation, it may be necessary to provide certain Polyglot context options.<br/>
@@ -103,17 +109,25 @@ public abstract class ScriptJob extends Job<JobArguments> {
             // preventing external code or subclasses from interfering and isolating synchronization to this initialization.
             synchronized (declaredArgumentsLock) {
                 if (declaredArguments == null) {
-                    String optionsName = JOB_OPTION_NAME_PREFIX + language;
-                    String optionsValue = (String) step.getPreAssignedArgumentValue(optionsName);
-                    Map<String, String> options = getJobOptions(step, optionsName, optionsValue);
-                    JobArgument<Map<String, String>> optionsArg = new JobArgument<>(optionsName, false);
-                    optionsArg.setValue(options);
+                    // 1) create js7_options.graalvm.js | js7_options.graalvm.python argument
+                    String argumentNameOptions = getArgumentNameOptions();
+                    String optionsValue = (String) step.getPreAssignedArgumentValue(argumentNameOptions);
+                    Map<String, String> options = getJobOptions(step, argumentNameOptions, optionsValue);
+                    JobArgument<String> argOptions = new JobArgument<>(argumentNameOptions, false);
+
+                    // 2) create the second "resolved" argument if the options are not empty
+                    JobArgument<Map<String, String>> argOptionsResolved = null;
+                    if (options != null) {
+                        argOptionsResolved = new JobArgument<>(getArgumentNameOptionsResolved(), false, options);
+                        argOptionsResolved.setIsDirty(true);
+                        // argOptionsResolved.setClazzType(options);
+                    }
 
                     try (Context context = createBuilder(step, options).build()) {
                         try {
                             Value job = createJobFromScript(context);
                             // Retrieve Job declaredArguments
-                            setDeclaredArguments(optionsArg, job.invokeMember(JOB_METHOD_GET_DECLARED_ARGUMENTS));
+                            setDeclaredArguments(argOptions, argOptionsResolved, job);
                         } catch (PolyglotException e) {
                             throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
                         }
@@ -126,18 +140,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
-        String optionsName = JOB_OPTION_NAME_PREFIX + language;
-
-        Map<String, String> options = null;
-        JobArgument<?> optionsArg = step.getAllArguments().entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(optionsName)).map(e -> e
-                .getValue()).findFirst().orElse(null);
-
-        if (optionsArg != null) {
-            String optionsValue = (String) optionsArg.getValue();
-            options = getJobOptions(step, optionsName, optionsValue);
-            optionsArg.applyValue(options);
-        }
-        Builder builder = createBuilder(step, options);
+        Builder builder = createBuilder(step, getJobOptionsFromArgs(step));
         try (Context context = builder.build()) {
             try {
                 Value job = createJobFromScript(context);
@@ -154,10 +157,19 @@ public abstract class ScriptJob extends Job<JobArguments> {
      * Multi threaded access requested by thread Thread[#46,JS7 blocking job 46,5,main] but is not allowed for language(s) js.<br/>
      * at com.oracle.truffle.polyglot.PolyglotEngineException.illegalState(PolyglotEngineException.java:135) ~[org.graalvm.truffle:?]<br>
      * ... */
-    // @Override
-    // public void onOrderProcessCancel(OrderProcessStep<JobArguments> step) throws Exception {
-
-    // }
+    @Override
+    public void onProcessOrderCanceled(OrderProcessStep<JobArguments> step) throws Exception {
+        Builder builder = createBuilder(step, getJobOptionsFromArgs(step));
+        try (Context context = builder.build()) {
+            try {
+                Value job = createJobFromScript(context);
+                // Call job onProcessOrderCanceled
+                job.invokeMember(JOB_METHOD_ON_PROCESS_ORDER_CANCELED, step);
+            } catch (PolyglotException e) {
+                throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
+            }
+        }
+    }
 
     private Builder createBuilder(OrderProcessStep<JobArguments> step, Map<String, String> options) throws Exception {
         Builder builder = Context.newBuilder(language).allowAllAccess(true).allowHostAccess(HostAccess.ALL).allowHostClassLookup(className -> true)
@@ -180,9 +192,19 @@ public abstract class ScriptJob extends Job<JobArguments> {
         return job;
     }
 
-    private void setDeclaredArguments(JobArgument<Map<String, String>> optionsArg, Value declaredArgs) throws Exception {
+    private void setDeclaredArguments(JobArgument<String> argOptions, JobArgument<Map<String, String>> argOptionsResolved, Value job)
+            throws Exception {
+        // e.g., Python job with a custom constructor that skips super().__init__();
+        // declaredArguments remains unset
+        Value propertyDeclaredArguments = job.getMember(JOB_PROPERY_DECLARED_ARGUMENTS);
+        if (propertyDeclaredArguments == null) {
+            job.putMember(JOB_PROPERY_DECLARED_ARGUMENTS, null);
+        }
+
         List<JobArgument<?>> declared = new ArrayList<>();
         List<ASOSArguments> included = new ArrayList<>();
+
+        Value declaredArgs = job.invokeMember(JOB_METHOD_GET_DECLARED_ARGUMENTS);
         if (declaredArgs.hasMembers()) {
             for (String key : declaredArgs.getMemberKeys()) {
                 Value member = declaredArgs.getMember(key);
@@ -236,10 +258,12 @@ public abstract class ScriptJob extends Job<JobArguments> {
             }
         }
 
-        if (optionsArg != null) {
-            declared.add(optionsArg);
+        if (argOptions != null) {
+            declared.add(argOptions);
         }
-
+        if (argOptionsResolved != null) {
+            declared.add(argOptionsResolved);
+        }
         declaredArguments = new JobArguments(included.toArray(ASOSArguments[]::new));
         declaredArguments.setDynamicArgumentFields(declared);
     }
@@ -287,6 +311,22 @@ public abstract class ScriptJob extends Job<JobArguments> {
         return defaultValue;
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, String> getJobOptionsFromArgs(OrderProcessStep<JobArguments> step) throws Exception {
+        JobArgument<?> argOptionsResolved = step.getAllArguments().get(getArgumentNameOptionsResolved());
+        if (argOptionsResolved != null && !argOptionsResolved.isEmpty()) {
+            if (step.getLogger().isTraceEnabled()) {
+                step.getLogger().trace("[getJobOptionsFromArgs][" + argOptionsResolved.getName() + "]" + argOptionsResolved.getValue());
+            }
+            return (Map<String, String>) argOptionsResolved.getValue();
+        }
+        JobArgument<?> argOptions = step.getAllArguments().get(getArgumentNameOptions());
+        if (argOptions != null && !argOptions.isEmpty()) {
+            return getJobOptions(step, argOptions.getName(), (String) argOptions.getValue());
+        }
+        return null;
+    }
+
     private Map<String, String> getJobOptions(OrderProcessStep<JobArguments> step, String optionsName, String optionsValue) throws Exception {
         if (optionsValue == null) {
             return null;
@@ -299,16 +339,12 @@ public abstract class ScriptJob extends Job<JobArguments> {
             if (o != null && o.getOptions() != null) {
                 options = o.getOptions();
             }
-            // options value logged by the Job API at DEBUG level: All Resulting Arguments
         } else {
             File f = new File(optionsValue);
             if (f.exists()) {
                 ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(f, ScriptJobOptions.class);
                 if (o != null && o.getOptions() != null) {
                     options = o.getOptions();
-                }
-                if (step.getLogger().isDebugEnabled()) {
-                    step.getLogger().debug(String.format("[%s][%s]%s", method, optionsName, options));
                 }
             } else {
                 if (step.getLogger().isDebugEnabled()) {
@@ -325,6 +361,14 @@ public abstract class ScriptJob extends Job<JobArguments> {
             throw new ScriptJobException(job, "job definition not loaded");
         }
         return script;
+    }
+
+    private String getArgumentNameOptions() {
+        return JOB_OPTION_NAME_PREFIX + language;
+    }
+
+    private String getArgumentNameOptionsResolved() {
+        return getArgumentNameOptions() + ".resolved";
     }
 
     /** Returns the number of lines in the predefined job definition script.<br/>

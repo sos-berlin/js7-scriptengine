@@ -26,4 +26,15 @@ public class JavaScriptJob extends ScriptJob {
         return null;
     }
 
+    @Override
+    protected Boolean isMethodOverridden(Value job, String methodName) {
+        try {
+            Value instanceMethod = job.getMember(methodName);
+            Value baseMethod = job.getMember("__proto__").getMember(methodName);
+            return instanceMethod != null && !instanceMethod.equals(baseMethod);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

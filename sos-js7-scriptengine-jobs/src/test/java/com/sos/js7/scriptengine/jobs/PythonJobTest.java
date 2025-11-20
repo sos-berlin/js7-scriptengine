@@ -13,28 +13,30 @@ import com.sos.js7.scriptengine.jobs.commons.ScriptJobTest;
 
 public class PythonJobTest extends ScriptJobTest {
 
+    private static final String ARG_NAME_OPTIONS = "js7_options.graalvm.python";
+
     @Ignore
     @Test
-    public void testJob() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job.jobdef";
+    public void testJobDeclaredArguments() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments.jobdef";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
         // if JS7Job.jobdef uses js7.IncludableArgument.SSH_PROVIDER - set required argument user
         // args.put("user", "from java PythonJobTest");
-        args.put("js7_options.graalvm.python", SOSPath.readFile(options)); // as string
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
 
         execute(new PythonJob(null), file, args);
     }
 
     @Ignore
     @Test
-    public void testJobSimple() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Simple.jobdef";
+    public void testJobHelloWorld() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-HelloWorld.jobdef";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
-        args.put("js7_options.graalvm.python", SOSPath.readFile(options));
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options));
         // args.put("my_arg2", "xyz");
 
         execute(new PythonJob(null), file, args);
@@ -42,13 +44,13 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
-    public void testJobImportModule() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-ImportModule.jobdef";
+    public void testJobImportCustomModule() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-ImportCustomModule-mysql.connector.jobdef";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
-        args.put("js7_options.graalvm.python", SOSPath.readFile(options)); // as string
-        // args.put("js7_options.graalvm.python", options.toString()); // as file
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+        // args.put(ARG_NAME_OPTIONS, options.toString()); // as file
 
         execute(new PythonJob(null), file, args);
     }
@@ -79,8 +81,18 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobSimpleWithConstructor() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Simple-WithConsctructor.jobdef";
+
+        Map<String, Object> args = new HashMap<>();
+
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
     public void testJobWithCredentialStore() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-CredentialStore.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments-IncludedArguments-CredentialStore.jobdef";
 
         Map<String, Object> args = new HashMap<>();
         addCredentialStoreArguments(args);
@@ -91,7 +103,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithSSHProvider() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-SSHProvider.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-SSHProvider.jobdef";
 
         Map<String, Object> args = new HashMap<>();
         addCredentialStoreArguments(args);
@@ -117,7 +129,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithSOSHibernate() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-SOSHibernate.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-SOSHibernate-SQLExecutor.jobdef";
 
         Map<String, Object> args = new HashMap<>();
 
@@ -132,5 +144,18 @@ public class PythonJobTest extends ScriptJobTest {
         Map<String, Object> args = new HashMap<>();
 
         execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithCancelablePythonObject() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-PythonObject.jobdef";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+
+        execute(new PythonJob(null), file, args, 5);
     }
 }

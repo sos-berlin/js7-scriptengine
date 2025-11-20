@@ -39,3 +39,14 @@ class js7:
 
         def getDeclaredArguments(self):
             return self.declaredArguments   
+
+        def cancelHibernate(self, js7Step, session):
+            if js7Step is not None and session is not None:
+                import java
+                java.type("com.sos.jitl.jobs.db.common.CancelableDatabaseJob").cancelHibernate(js7Step, session) 
+            
+        def cancelSSHProvider(self, js7Step, ssh_provider):
+            if js7Step is not None and  ssh_provider is not None:
+                # log the outcome of the cancelCommands operation
+                js7Step.getLogger().info(f"[cancel/kill][ssh]{ssh_provider.cancelCommands()}")
+                ssh_provider.disconnect();

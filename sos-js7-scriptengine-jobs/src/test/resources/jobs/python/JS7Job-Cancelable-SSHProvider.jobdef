@@ -1,0 +1,35 @@
+import java
+SSHProvider = java.type("com.sos.commons.vfs.ssh.SSHProvider")
+
+class JS7JobArguments:
+    """Job arguments definition. Include SSH Provider arguments."""
+     
+    def __init__(self):
+        self.includedArguments = [js7.IncludableArgument.SSH_PROVIDER]
+
+class JS7Job(js7.Job):
+    
+    def __init__(self):
+        self.declaredArguments = JS7JobArguments()
+  
+    def processOrder(self, js7Step):
+        args = js7Step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER)        
+        ssh_provider = None
+                
+        try:
+            ssh_provider = SSHProvider.createInstance(js7Step.getLogger(), args)
+            ssh_provider.connect()
+            
+            #######################################################
+			js7Step.setCancelableResource(ssh_provider)
+            #######################################################
+            
+            js7Step.getLogger().info(f"[ssh_provider.getServerInfo] {ssh_provider.getServerInfo()}")
+
+        finally:
+            ssh_provider and ssh_provider.disconnect()
+            
+    def onProcessOrderCanceled(self, js7Step):
+        # super() or self
+        self.cancelSSHProvider(js7Step, js7Step.getCancelableResource())
+   

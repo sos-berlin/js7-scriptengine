@@ -42,4 +42,15 @@ public class PythonJob extends ScriptJob {
         return o;
     }
 
+    @Override
+    protected Boolean isMethodOverridden(Value job, String methodName) {
+        try {
+            Value instanceMethod = job.getMember(methodName);
+            Value baseMethod = job.getMember("__class__").getMember("__bases__").getArrayElement(0).getMember(methodName);
+            return instanceMethod != null && !instanceMethod.equals(baseMethod);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

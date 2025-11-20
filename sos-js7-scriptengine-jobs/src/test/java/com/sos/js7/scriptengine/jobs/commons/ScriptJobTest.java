@@ -27,6 +27,10 @@ public abstract class ScriptJobTest {
     }
 
     public void execute(Job<JobArguments> job, String file, Map<String, Object> args) throws Exception {
+        execute(job, file, args, 0);
+    }
+
+    public void execute(Job<JobArguments> job, String file, Map<String, Object> args, int cancelAfterSeconds) throws Exception {
         String script = "";
 
         if (file != null) {
@@ -34,6 +38,9 @@ public abstract class ScriptJobTest {
         }
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(job);
         SOSReflection.setDeclaredFieldValue(h.getJob(), "script", script);
+        if (cancelAfterSeconds > 0) {
+            h.getStepConfig().setCancelAfterSeconds(cancelAfterSeconds);
+        }
         boolean started = false;
         try {
             h.onStart(args);

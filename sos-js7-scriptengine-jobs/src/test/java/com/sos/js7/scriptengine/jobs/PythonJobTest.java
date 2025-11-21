@@ -2,6 +2,7 @@ package com.sos.js7.scriptengine.jobs;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +37,10 @@ public class PythonJobTest extends ScriptJobTest {
         Map<String, Object> args = new HashMap<>();
         // if JS7Job.jobdef uses js7.IncludableArgument.SSH_PROVIDER - set required argument user
         // args.put("user", "from java PythonJobTest");
+
+        Map<String, Map<String, Integer>> map = new HashMap<>();
+        map.put("first_map", Collections.singletonMap("submap_1", 1));
+        args.put("op_arg_map", map);
         args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
 
         execute(new PythonJob(null), file, args);

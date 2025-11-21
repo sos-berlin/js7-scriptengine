@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -286,7 +285,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
             if (value.fitsInLong()) {
                 defaultValue = Long.valueOf(value.asLong());
             } else if (value.fitsInDouble()) {
-                defaultValue = new BigDecimal(value.asDouble()); // see com.sos.js7.job.JobArgument supported types
+                defaultValue = Double.valueOf(value.asDouble()); // see com.sos.js7.job.JobArgument supported types
             } else {
                 defaultValue = value.toString();
             }

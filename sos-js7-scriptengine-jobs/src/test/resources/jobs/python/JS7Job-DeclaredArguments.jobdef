@@ -43,6 +43,28 @@ class JS7Job(js7.Job):
         js7Step.getLogger().info(f"[onOrderProcess][declaredArgument={da.getName()}]{da.getValue()}")
         js7Step.getLogger().info(f"[onOrderProcess][declaredArgumentValue]{type(js7Step.getDeclaredArgumentValue(self.declaredArguments.my_arg2.name))}")
         
+        
+        args = js7Step.getAllDeclaredArguments()
+        for arg in args:
+            v = arg.getValue()
+            js7Step.getLogger().info(f"  {arg.getName()}={v}={type(v).__module__}.{type(v).__name__}")
+            if v is None:
+                js7Step.getLogger().info("      Python None")
+            elif isinstance(v, list):
+                js7Step.getLogger().info("      Python List")
+            elif isinstance(v, dict):
+                js7Step.getLogger().info("      Python Dict")
+        
+        
+        arg = js7Step.getAllArguments().get("my_arg_map");
+        if arg is not None:
+            v = arg.getValue()  
+            js7Step.getLogger().info(f"MAP ARG  {arg.getName()}={v}={type(v).__module__}.{type(v).__name__}")
+            
+            if isinstance(v, dict):
+                js7Step.getLogger().info("      Python Dict")
+        
+        
         js7Step.getOutcome().setReturnCode(100)
         js7Step.getOutcome().putVariable("var_1", "var_1_value")
         #js7Step.getOutcome().setFailed()

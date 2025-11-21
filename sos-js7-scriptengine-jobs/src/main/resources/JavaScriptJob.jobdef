@@ -41,6 +41,8 @@ var js7 = {
 		}
 
 		processOrder(js7Step) { }
+		
+		onProcessOrderCanceled(js7Step) {}
 
         setJobEnvironment(js7JobEnvironment) {
 			this.#jobEnvironment = js7JobEnvironment;
@@ -53,5 +55,22 @@ var js7 = {
 		getDeclaredArguments() {
 			return this.declaredArguments;
 		}
+		
+		cancelHibernate(js7Step, session) {
+           if (js7Step != null && session != null) {
+        		const CancelableDatabaseJob = Java.type("com.sos.jitl.jobs.db.common.CancelableDatabaseJob");
+        		CancelableDatabaseJob.cancelHibernate(js7Step, session);
+    		}
+        }
+        
+        cancelSSHProvider(js7Step, sshProvider) {
+    		if (js7Step != null && sshProvider != null) {
+        		// log the outcome of the cancelCommands operation
+            	const result = sshProvider.cancelCommands();
+            	js7Step.getLogger().info("[cancel/kill][ssh]"+ result);
+            	sshProvider.disconnect();
+    		}
+    	}
+
 	}
 }

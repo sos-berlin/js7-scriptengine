@@ -1,0 +1,12 @@
+from js7.modules.js7_java_object_inspector import JS7JavaObjectInspector
+
+class JS7Job(js7.Job):
+    
+    def processOrder(self, js7Step):
+        inspector = JS7JavaObjectInspector()
+    
+        inspector.log_public_methods(js7Step.getLogger(), "self.getJobEnvironment()", self.getJobEnvironment())
+        inspector.log_public_methods(js7Step.getLogger(), "js7Step", js7Step)
+        
+        inspector.log_arguments(js7Step)
+        

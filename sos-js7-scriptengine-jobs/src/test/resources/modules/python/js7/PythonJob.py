@@ -1,0 +1,55 @@
+# This .py file is a copy of src/resources/PythonJob.jobdef to make it importable as a module.
+# Note: currently, the job is loaded twice (once from .jobdef, once as the module)
+
+def getJS7Job():
+    return JS7Job()
+
+class js7:
+    class DisplayMode:
+        MASKED = "MASKED"
+        UNMASKED = "UNMASKED"
+        UNKNOWN = "UNKNOWN"
+
+    class IncludableArgument:
+        CREDENTIAL_STORE = "CREDENTIAL_STORE"
+        PROXY = "PROXY"
+        JAVA_KEY_STORE = "JAVA_KEY_STORE"
+        SSH_PROVIDER = "SSH_PROVIDER"
+
+    class JobArgument:
+        def __init__(self, name, required=False, defaultValue=None, displayMode=None):
+            self.name = name
+            self.required = required
+            self.defaultValue = defaultValue
+            self.displayMode = displayMode if displayMode is not None else js7.DisplayMode.UNMASKED
+
+    class Job:
+        def __init__(self):
+            self.jobEnvironment = None
+            self.declaredArguments = None
+
+        def processOrder(self, js7Step):
+            pass
+
+        def onProcessOrderCanceled(self, js7Step):
+            pass
+
+        def setJobEnvironment(self, js7JobEnvironment):
+            self.jobEnvironment=js7JobEnvironment
+            
+        def getJobEnvironment(self):
+            return self.jobEnvironment
+
+        def getDeclaredArguments(self):
+            return self.declaredArguments   
+
+        def cancelHibernate(self, js7Step, session):
+            if js7Step is not None and session is not None:
+                import java
+                java.type("com.sos.jitl.jobs.db.common.CancelableDatabaseJob").cancelHibernate(js7Step, session) 
+            
+        def cancelSSHProvider(self, js7Step, ssh_provider):
+            if js7Step is not None and  ssh_provider is not None:
+                # log the outcome of the cancelCommands operation
+                js7Step.getLogger().info(f"[cancel/kill][ssh]{ssh_provider.cancelCommands()}")
+                ssh_provider.disconnect();

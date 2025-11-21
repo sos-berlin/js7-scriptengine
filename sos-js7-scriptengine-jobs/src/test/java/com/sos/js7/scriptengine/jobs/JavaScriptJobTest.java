@@ -12,8 +12,8 @@ public class JavaScriptJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
-    public void testJob() throws Exception {
-        String file = "src/test/resources/jobs/js/JS7Job.js";
+    public void testJobDeclaredArguments() throws Exception {
+        String file = "src/test/resources/jobs/js/JS7Job-DeclaredArguments.js";
 
         Map<String, Object> args = new HashMap<>();
         args.put("my_arg1", "xyz");

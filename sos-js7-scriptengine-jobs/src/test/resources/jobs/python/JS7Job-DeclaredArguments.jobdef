@@ -42,45 +42,8 @@ class JS7Job(js7.Job):
         da = js7Step.getDeclaredArgument(self.declaredArguments.my_arg2.name)
         js7Step.getLogger().info(f"[onOrderProcess][declaredArgument={da.getName()}]{da.getValue()}")
         js7Step.getLogger().info(f"[onOrderProcess][declaredArgumentValue]{type(js7Step.getDeclaredArgumentValue(self.declaredArguments.my_arg2.name))}")
-
-        lh = LogHelper()
-        lh.logPublicMethods(js7Step.getLogger(), "self.getJobEnvironment()", self.getJobEnvironment())
-        lh.logPublicMethods(js7Step.getLogger(), "js7Step", js7Step)
-        lh.logArguments(js7Step)
         
         js7Step.getOutcome().setReturnCode(100)
         js7Step.getOutcome().putVariable("var_1", "var_1_value")
         #js7Step.getOutcome().setFailed()
 
-class LogHelper:
-    """Log Helper."""
-    
-    def __init__(self):
-        self.regExp = re.compile(r"equals|toString|hashCode|getClass|notify|notifyAll|wait|^__.*")
-
-    def logPublicMethods(self, logger, title, o):
-        logger.info(f"---------------Public Methods {title}--")
-        pm = [m for m in dir(o) if callable(getattr(o, m)) and not self.regExp.search(m)]
-        for m in pm:
-            logger.info(f" {m}")
-
-    def logArguments(self, js7Step):
-        logger = js7Step.getLogger()
-        
-        #dict
-        logger.info("---------------All Arguments--")
-        args = js7Step.getAllArguments()
-        logger.info("getAllArguments:")
-        for k, v in args.items():
-            logger.info(f" {k}={v}")
-
-	    # object
-        logger.info("---------------Declared Arguments--")
-        args = js7Step.getDeclaredArguments()
-        logger.info(f"getDeclaredArguments: {args}")
-        
-        # list
-        args = js7Step.getAllDeclaredArguments()
-        logger.info("getAllDeclaredArguments:")
-        for v in args:
-            logger.info(f" {v}")

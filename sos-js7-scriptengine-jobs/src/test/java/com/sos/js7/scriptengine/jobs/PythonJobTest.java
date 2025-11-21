@@ -17,6 +17,18 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobPythonInfos() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Python-Infos.jobdef";
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
     public void testJobDeclaredArguments() throws Exception {
         String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments.jobdef";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
@@ -45,7 +57,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobImportCustomModule() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-ImportCustomModule-mysql.connector.jobdef";
+        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-mysql.connector.jobdef";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
@@ -82,7 +94,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobSimpleWithConstructor() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Simple-WithConsctructor.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Simple-WithConstructor.jobdef";
 
         Map<String, Object> args = new HashMap<>();
 
@@ -157,5 +169,35 @@ public class PythonJobTest extends ScriptJobTest {
         args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
 
         execute(new PythonJob(null), file, args, 5);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithJS7ModulesJavaObjectInspector() throws Exception {
+        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-java_object_inspector.jobdef";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithJS7ModulesJS7Job() throws Exception {
+        // See src/test/resporces/modules/python/js7
+        // PythonJob.py is a copy of src/resources/PythonJob.jobdef to make it importable as a module
+        // Note: currently, the job is loaded twice (once from .jobdef, once as the module)
+
+        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-js7_job_hello_world.jobdef";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+
+        execute(new PythonJob(null), file, args);
     }
 }

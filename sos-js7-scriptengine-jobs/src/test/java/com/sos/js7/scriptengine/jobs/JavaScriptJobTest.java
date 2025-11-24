@@ -1,14 +1,19 @@
 package com.sos.js7.scriptengine.jobs;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.js7.scriptengine.jobs.commons.ScriptJobTest;
 
 public class JavaScriptJobTest extends ScriptJobTest {
+
+    private static final String ARG_NAME_OPTIONS = "js7_options.graalvm.js";
 
     @Ignore
     @Test
@@ -28,7 +33,7 @@ public class JavaScriptJobTest extends ScriptJobTest {
         String file = "src/test/resources/jobs/js/JS7Job-NODEJS.js";
 
         Map<String, Object> args = new HashMap<>();
-        args.put("js7_options.graalvm.js", "src/test/resources/jobs/js/ScriptJobOptions.json");
+        args.put(ARG_NAME_OPTIONS, "src/test/resources/jobs/js/ScriptJobOptions.json");
 
         execute(new JavaScriptJob(null), file, args);
     }
@@ -40,18 +45,6 @@ public class JavaScriptJobTest extends ScriptJobTest {
 
         Map<String, Object> args = new HashMap<>();
         addCredentialStoreArguments(args);
-
-        execute(new JavaScriptJob(null), file, args);
-    }
-
-    @Ignore
-    @Test
-    public void testJobWithSSHProvider() throws Exception {
-        String file = "src/test/resources/jobs/js/JS7Job-SSHProvider.js";
-
-        Map<String, Object> args = new HashMap<>();
-        addCredentialStoreArguments(args);
-        addSSHProviderArguments(args);
 
         execute(new JavaScriptJob(null), file, args);
     }
@@ -70,10 +63,35 @@ public class JavaScriptJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
-    public void testJobWithSOSHibernate() throws Exception {
-        String file = "src/test/resources/jobs/js/JS7Job-SOSHibernate.js";
+    public void testJobWithCancelableSSHProvider() throws Exception {
+        String file = "src/test/resources/jobs/js/JS7Job-Cancelable-SSHProvider.js";
 
         Map<String, Object> args = new HashMap<>();
+        addCredentialStoreArguments(args);
+        addSSHProviderArguments(args);
+
+        execute(new JavaScriptJob(null), file, args, 5);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithCancelableSOSHibernate() throws Exception {
+        String file = "src/test/resources/jobs/js/JS7Job-Cancelable-SOSHibernate-SQLExecutor.js";
+
+        Map<String, Object> args = new HashMap<>();
+
+        execute(new JavaScriptJob(null), file, args, 5);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithJS7ModulesJavaObjectInspector() throws Exception {
+        String file = "src/test/resources/jobs/js/custom_modules/JS7Job-js7.modules-java_object_inspector.js";
+
+        Path options = Paths.get("src/test/resources/jobs/js/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
 
         execute(new JavaScriptJob(null), file, args);
     }

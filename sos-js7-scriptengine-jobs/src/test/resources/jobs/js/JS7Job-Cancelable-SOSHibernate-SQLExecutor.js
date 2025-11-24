@@ -1,7 +1,7 @@
 class JS7Job extends js7.Job {
 
 	processOrder(js7Step) {
-		var sql = "select TEXT_VALUE from JOC_VARIABLES where NAME='version'";
+		var sql = "SELECT SLEEP(15)";
 
 		var factory = null;
 		var session = null;
@@ -10,9 +10,9 @@ class JS7Job extends js7.Job {
 			factory.build();
 
 			session = factory.openStatelessSession();
-			var result = session.getSingleValueNativeQuery(sql);
+			js7Step.setCancelableResource(session)
 
-			js7Step.getLogger().info("[" + sql + "]" + result);
+			session.getSQLExecutor().execute(sql);
 		}
 		finally {
 			if (factory) {
@@ -20,5 +20,10 @@ class JS7Job extends js7.Job {
 			}
 		}
 	}
+
+	onProcessOrderCanceled(js7Step) {
+		this.cancelHibernate(js7Step, js7Step.getCancelableResource());
+	}
+
 }
 

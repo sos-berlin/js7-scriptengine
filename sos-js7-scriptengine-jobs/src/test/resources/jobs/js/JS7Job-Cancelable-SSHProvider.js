@@ -13,13 +13,11 @@ class JS7Job extends js7.Job {
 	processOrder(js7Step) {
 		var args = js7Step.getIncludedArguments(js7.IncludableArgument.SSH_PROVIDER);
 		var sshProvider = null;
-		
+
 		try {
 			sshProvider = com.sos.commons.vfs.ssh.SSHProvider.createInstance(js7Step.getLogger(), args);
-			//log sshProvider public methods
-			//var lh = new LogHelper();
-			//lh.logPublicMethods(js7Step.getLogger(), "sshProvider", sshProvider);
 			sshProvider.connect();
+			js7Step.setCancelableResource(sshProvider)
 
 			js7Step.getLogger().info("[sshProvider.getServerInfo]" + sshProvider.getServerInfo());
 		}
@@ -50,21 +48,8 @@ class JS7JobWithIncludedCredentialStore extends js7.Job {
 		sshProvider.disconnect();
 
 	}
-}
 
-
-class LogHelper {
-	regExp = new RegExp("equals|toString|hashCode|getClass|notify|notifyAll|wait");
-
-	logPublicMethods(logger, title, o) {
-		logger.info("---------------Public Methods " + title + "--");
-		var pm = com.sos.commons.util.SOSReflection.getAllMethods(o.getClass());
-		for (var i in pm) {
-			var m = pm[i];
-			if (this.regExp.test(m.getName()) || java.lang.reflect.Modifier.isAbstract(m.getModifiers())) {
-				continue;
-			}
-			logger.info(" " + m);
-		}
+	onProcessOrderCanceled(js7Step) {
+		this.cancelSSHProvider(js7Step, js7Step.getCancelableResource());
 	}
 }

@@ -267,7 +267,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
             declared.add(argOptionsResolved);
         }
         declaredArguments = new JobArguments(included.toArray(ASOSArguments[]::new));
-        declaredArguments.setDynamicArgumentFields(declared);
+        declaredArguments.setDynamicArguments(declared);
     }
 
     private void tryApplyArgumentType(JobArgument<?> arg, Value typeValue, Value defaultValue) {

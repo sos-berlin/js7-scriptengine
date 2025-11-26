@@ -6,16 +6,30 @@ class JS7JobArguments:
     """Job arguments definition."""
     
     def __init__(self):
-        self.my_arg1 = js7.JobArgument("my_arg1", False, Path("path.txt"))
-        self.my_arg2 = js7.JobArgument("my_arg2", False, File("file.txt"))
-        self.my_arg3 = js7.JobArgument("my_arg3", True, "my_arg3 default", js7.DisplayMode.UNMASKED)
-        self.my_arg4 = js7.JobArgument("op_arg_final", False)
-        self.my_arg5 = js7.JobArgument("op_arg_string", False)
-        self.my_arg6 = js7.JobArgument("op_arg_numeric_1", False, 1)
-        self.my_arg7 = js7.JobArgument("op_arg_numeric_2", False, 1.23)
-        self.my_arg8 = js7.JobArgument("op_arg_boolean", False)
-        self.my_arg9 = js7.JobArgument("op_arg_list", False)
-        self.my_arg10 = js7.JobArgument("op_arg_map", False)
+        self.declared_path_with_python_default = js7.JobArgument("declared_path_with_python_default", False, Path("path.txt"))
+        self.declared_path_with_python_type = js7.JobArgument("declared_path_with_python_type", False, type=Path)
+        self.declared_path_with_python_default_and_type = js7.JobArgument("declared_path_with_python_default_and_type", False,Path("path.txt"), type=Path)
+        
+        self.declared_file_with_java_default = js7.JobArgument("declared_file_with_java_default", False, File("file.txt"))
+        self.declared_file_with_java_type = js7.JobArgument("declared_file_with_java_type", False, type=File)
+        
+        self.declared_string_with_python_type = js7.JobArgument("declared_string_with_python_type", False, type=str)
+        self.declared_boolean_with_python_type = js7.JobArgument("declared_boolean_with_python_type", False, type=bool)
+        self.declared_int_with_python_type = js7.JobArgument("declared_int_with_python_type", False, type=int)
+        self.declared_int_with_python_type_and_default_string = js7.JobArgument("declared_int_with_python_type_and_default_string", False, "123", type=int)
+        self.declared_float_with_python_type = js7.JobArgument("declared_float_with_python_type", False, type=float)
+        self.declared_list_with_python_type = js7.JobArgument("declared_list_with_python_type", False, type=list)
+        self.declared_map_with_python_type = js7.JobArgument("declared_map_with_python_type", False, type=dict)
+        self.declared_set_with_python_type = js7.JobArgument("declared_set_with_python_type", False, type=set)
+        
+        
+        #self.my_arg3 = js7.JobArgument("my_arg3", True, "my_arg3 default", js7.DisplayMode.UNMASKED)
+        #self.my_arg5 = js7.JobArgument("op_arg_string", False)
+        #self.my_arg6 = js7.JobArgument("op_arg_numeric_1", False, 1)
+        #self.my_arg7 = js7.JobArgument("op_arg_numeric_2", False, 1.23)
+        #self.my_arg8 = js7.JobArgument("op_arg_boolean", False)
+        #self.my_arg9 = js7.JobArgument("op_arg_list", False)
+        #self.my_arg10 = js7.JobArgument("op_arg_map", False)
   
         #self.includedArguments = [js7.IncludableArgument.CREDENTIAL_STORE, js7.IncludableArgument.SSH_PROVIDER]
         
@@ -38,11 +52,7 @@ class JS7Job(js7.Job):
         js7Step.getLogger().info(f"[onOrderProcess][self.hello_from_python]{self.hello_from_python}")
         js7Step.getLogger().info(f"[onOrderProcess][getJobEnvironment]{self.getJobEnvironment()}")
         js7Step.getLogger().info(f"[onOrderProcess][getJobEnvironment.getSystemEncoding]{self.getJobEnvironment().getSystemEncoding()}")
-
-        da = js7Step.getDeclaredArgument(self.declaredArguments.my_arg2.name)
-        js7Step.getLogger().info(f"[onOrderProcess][declaredArgument={da.getName()}]{da.getValue()}")
-        js7Step.getLogger().info(f"[onOrderProcess][declaredArgumentValue]{type(js7Step.getDeclaredArgumentValue(self.declaredArguments.my_arg2.name))}")
-        
+       
         
         args = js7Step.getAllDeclaredArguments()
         for arg in args:

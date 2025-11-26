@@ -4,10 +4,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -90,7 +92,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
         JOB_DEFINITIONS.computeIfAbsent(language, lang -> loadResource(this, jobDefinitionResourceName));
     }
 
-    protected abstract Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Value value);
+    protected abstract Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Type argumentJavaType, Value defaultValue);
 
     /** @apiNote currently not used */
     protected abstract Boolean isMethodOverridden(Value job, String methodName);
@@ -239,6 +241,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
                     boolean required = requiredValue.asBoolean();
                     Value defaultValue = member.getMember("defaultValue");
                     Value displayModeValue = member.getMember("displayMode");
+                    Value type = member.getMember("type");
 
                     JobArgument<?> arg = new JobArgument<>(name, required);
                     if (displayModeValue != null) {
@@ -250,7 +253,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
                                     e);
                         }
                     }
-                    tryApplyArgumentDefaultValue(arg, defaultValue);
+                    tryApplyArgumentType(arg, type, defaultValue);
                     arg.setIsDirty(false);
                     declared.add(arg);
                 }
@@ -267,8 +270,71 @@ public abstract class ScriptJob extends Job<JobArguments> {
         declaredArguments.setDynamicArgumentFields(declared);
     }
 
+    private void tryApplyArgumentType(JobArgument<?> arg, Value typeValue, Value defaultValue) {
+        if (typeValue == null || typeValue.isNull()) {
+            tryApplyArgumentDefaultValue(arg, null, defaultValue);
+            return;
+        }
+
+        Type type = null;
+        if (typeValue.isHostObject()) {
+            Object hostObj = typeValue.asHostObject();
+            if (hostObj instanceof Class<?>) { // java types
+                type = (Class<?>) hostObj;
+            }
+        } else if (typeValue.isMetaObject()) {
+            // python, javascript types
+            type = tryGetJavaTypeFromMetaObject(typeValue);
+        }
+
+        tryApplyArgumentDefaultValue(arg, type, defaultValue);
+
+        arg.setClazzType(type == null ? Object.class : type);
+    }
+
+    private Type tryGetJavaTypeFromMetaObject(Value typeValue) {
+        Type type = null;
+        try {
+            String typeName = typeValue.getMetaQualifiedName().toLowerCase();
+            switch (typeName) {
+            case "str":
+            case "string": // js
+                type = String.class;
+                break;
+            case "bool":
+            case "boolean": // js
+                type = Boolean.class;
+                break;
+            case "int":
+            case "long":
+            case "number": // js
+                type = Long.class;
+                break;
+            case "float":
+            case "double":
+                type = Double.class;
+                break;
+            case "list":
+            case "array": // js
+                type = List.class;
+                break;
+            case "dict":
+            case "map": // js
+            case "object": // js
+                type = Map.class;
+                break;
+            case "set":
+                type = Set.class;
+                break;
+            }
+        } catch (Exception e) {
+
+        }
+        return type;
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Object tryApplyArgumentDefaultValue(JobArgument arg, Value value) {
+    private Object tryApplyArgumentDefaultValue(JobArgument arg, Type argumentJavaType, Value value) {
         if (value == null || value.isNull()) {
             arg.setDefaultValue(null);
             return null;
@@ -292,17 +358,14 @@ public abstract class ScriptJob extends Job<JobArguments> {
         } else if (value.isHostObject()) {
             defaultValue = value.asHostObject();
         } else if (value.hasArrayElements()) {// list
-            // List<Object> list = new ArrayList<>();
-            // for (long i = 0; i < value.getArraySize(); i++) {
-            // Object o = tryApplyArgumentDefaultValue(arg, value.getArrayElement(i));
-            // if (o != null) {
-            // list.add(o);
-            // }
-            // }
-            arg.setClazzType(List.class);
+            if (argumentJavaType == null) {
+                arg.setClazzType(List.class);
+            }
             defaultValue = null;
         } else if (value.hasMembers()) {
-            defaultValue = tryApplyArgumentDefaultValueFromMembers(arg, value); // language specific - it can be an object (e.g. python Path or Set/Map)
+            defaultValue = tryApplyArgumentDefaultValueFromMembers(arg, argumentJavaType, value); // language specific - it can be an object (e.g. python Path
+                                                                                                  // or
+            // Set/Map)
         } else {
             defaultValue = (Object) value.toString();
         }

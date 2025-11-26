@@ -23,12 +23,14 @@ var js7 = {
 		required;
 		defaultValue;
 		displayMode;
+		type;
 
-		constructor(name, required = false, defaultValue = null, displayMode = js7.DisplayMode.UNMASKED) {
+		constructor(name, required = false, defaultValue = null, displayMode = js7.DisplayMode.UNMASKED, type = null) {
 			this.name = name;
 			this.required = required;
 			this.defaultValue = defaultValue;
 			this.displayMode = displayMode;
+			this.type = type;
 		}
 
 	},

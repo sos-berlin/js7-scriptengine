@@ -1,5 +1,6 @@
 package com.sos.js7.scriptengine.jobs;
 
+import java.lang.reflect.Type;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
@@ -24,20 +25,22 @@ public class PythonJob extends ScriptJob {
     }
 
     @Override
-    public Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Value value) {
+    public Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Type argumentJavaType, Value defaultValue) {
         // Python objects
-        if (value.getMemberKeys().contains("__fspath__")) {
-            return Paths.get(value.invokeMember("__fspath__").asString());
+        if (defaultValue.getMemberKeys().contains("__fspath__")) {
+            return Paths.get(defaultValue.invokeMember("__fspath__").asString());
         }
 
         Object o = null;
-        // Python Set
-        if (value.hasMember("add") && value.hasMember("discard")) {
-            arg.setClazzType(Set.class);
-        }
-        // else if (value.hasMember("keys") && value.hasMember("values") && value.hasMember("items")) {
-        else {
-            arg.setClazzType(Map.class);
+        if (argumentJavaType == null) {
+            // Python Set
+            if (defaultValue.hasMember("add") && defaultValue.hasMember("discard")) {
+                arg.setClazzType(Set.class);
+            }
+            // else if (defaultValue.hasMember("keys") && defaultValue.hasMember("values") && defaultValue.hasMember("items")) {
+            else {
+                arg.setClazzType(Map.class);
+            }
         }
         return o;
     }

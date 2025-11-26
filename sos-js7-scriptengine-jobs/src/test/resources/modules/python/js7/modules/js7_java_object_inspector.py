@@ -14,7 +14,7 @@ class JS7JavaObjectInspector:
         for m in pm:
             if self.regExp.search(m.getName()):
                 continue
-            logger.info(f" {m}")
+            logger.info(f" {m.toGenericString()}")
 
     def log_arguments(self, js7Step):
         logger = js7Step.getLogger()

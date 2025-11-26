@@ -1,5 +1,6 @@
 package com.sos.js7.scriptengine.jobs;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.graalvm.polyglot.Value;
@@ -21,8 +22,10 @@ public class JavaScriptJob extends ScriptJob {
     }
 
     @Override
-    public Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Value value) {
-        arg.setClazzType(Map.class);
+    public Object tryApplyArgumentDefaultValueFromMembers(JobArgument<?> arg, Type argumentJavaType, Value defaultValue) {
+        if (argumentJavaType == null) {
+            arg.setClazzType(Map.class);
+        }
         return null;
     }
 

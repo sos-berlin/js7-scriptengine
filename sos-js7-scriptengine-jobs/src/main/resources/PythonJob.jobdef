@@ -14,11 +14,12 @@ class js7:
         SSH_PROVIDER = "SSH_PROVIDER"
 
     class JobArgument:
-        def __init__(self, name, required=False, defaultValue=None, displayMode=None):
+        def __init__(self, name, required=False, defaultValue=None, displayMode=None, type=None):
             self.name = name
             self.required = required
             self.defaultValue = defaultValue
             self.displayMode = displayMode if displayMode is not None else js7.DisplayMode.UNMASKED
+            self.type = type
 
     class Job:
         def __init__(self):

@@ -1,7 +1,6 @@
 package com.sos.js7.scriptengine.jobs;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -19,6 +18,7 @@ import org.graalvm.polyglot.Context.Builder;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.io.IOAccess;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
@@ -29,12 +29,11 @@ import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
-import com.sos.js7.job.JobHelper;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.exception.JobArgumentException;
+import com.sos.js7.scriptengine.jobs.commons.ScriptJobOptionsReader;
 import com.sos.js7.scriptengine.jobs.exceptions.ScriptJobException;
 import com.sos.js7.scriptengine.jobs.exceptions.ScriptJobRunTimeException;
-import com.sos.js7.scriptengine.json.ScriptJobOptions;
 
 public abstract class ScriptJob extends Job<JobArguments> {
 
@@ -43,10 +42,7 @@ public abstract class ScriptJob extends Job<JobArguments> {
      * - python: resources/PythonJob.jobdef */
     private static final Map<String, String> JOB_DEFINITIONS = new ConcurrentHashMap<>();
 
-    /** JOB_OPTION_NAME_PREFIX + language: js7_options.graalvm.js | js7_options.graalvm.python */
-    private static final String JOB_OPTION_NAME_PREFIX = "js7_options.graalvm.";
-
-    private static final String POLYGLOT_WARN_PROPERTY_NAME = "polyglot.engine.WarnInterpreterOnly";
+    private static final String POLYGLOT_ENGINE_SYSTEM_PROPERTY_WARN_INTERPRETER_ONLY = "polyglot.engine.WarnInterpreterOnly";
 
     private static final String FUNCTION_NAME_GET_JOB = "getJS7Job";
 
@@ -76,9 +72,9 @@ public abstract class ScriptJob extends Job<JobArguments> {
     private final Object declaredArgumentsLock = new Object();
 
     static {
-        String warnProperty = System.getProperty(POLYGLOT_WARN_PROPERTY_NAME);
+        String warnProperty = System.getProperty(POLYGLOT_ENGINE_SYSTEM_PROPERTY_WARN_INTERPRETER_ONLY);
         if (warnProperty == null) {
-            System.setProperty(POLYGLOT_WARN_PROPERTY_NAME, "false");
+            System.setProperty(POLYGLOT_ENGINE_SYSTEM_PROPERTY_WARN_INTERPRETER_ONLY, "false");
         }
     }
 
@@ -110,25 +106,13 @@ public abstract class ScriptJob extends Job<JobArguments> {
             // preventing external code or subclasses from interfering and isolating synchronization to this initialization.
             synchronized (declaredArgumentsLock) {
                 if (declaredArguments == null) {
-                    // 1) create js7_options.graalvm.js | js7_options.graalvm.python argument
-                    String argumentNameOptions = getArgumentNameOptions();
-                    String optionsValue = (String) step.getPreAssignedArgumentValue(argumentNameOptions);
-                    Map<String, String> options = getJobOptions(step, argumentNameOptions, optionsValue);
-                    JobArgument<String> argOptions = new JobArgument<>(argumentNameOptions, false);
-
-                    // 2) create the second "resolved" argument if the options are not empty
-                    JobArgument<Map<String, String>> argOptionsResolved = null;
-                    if (options != null) {
-                        argOptionsResolved = new JobArgument<>(getArgumentNameOptionsResolved(), false, options);
-                        argOptionsResolved.setIsDirty(true);
-                        // argOptionsResolved.setClazzType(options);
-                    }
-
-                    try (Context context = createBuilder(step, options).build()) {
+                    ScriptJobOptionsReader reader = new ScriptJobOptionsReader(language);
+                    reader.readFromPreAssignedArgumentValue(step);
+                    try (Context context = createBuilder(reader).build()) {
                         try {
                             Value job = createJobFromScript(context);
                             // Retrieve Job declaredArguments
-                            setDeclaredArguments(argOptions, argOptionsResolved, job);
+                            setDeclaredArguments(reader.createArgumentOptions(), reader.createArgumentOptionsResolved(), job);
                         } catch (PolyglotException e) {
                             throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
                         }
@@ -141,7 +125,10 @@ public abstract class ScriptJob extends Job<JobArguments> {
 
     @Override
     public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
-        Builder builder = createBuilder(step, getJobOptionsFromArgs(step));
+        ScriptJobOptionsReader reader = new ScriptJobOptionsReader(language);
+        reader.read(step);
+
+        Builder builder = createBuilder(reader);
         try (Context context = builder.build()) {
             try {
                 Value job = createJobFromScript(context);
@@ -160,7 +147,10 @@ public abstract class ScriptJob extends Job<JobArguments> {
      * ... */
     @Override
     public void onProcessOrderCanceled(OrderProcessStep<JobArguments> step) throws Exception {
-        Builder builder = createBuilder(step, getJobOptionsFromArgs(step));
+        ScriptJobOptionsReader reader = new ScriptJobOptionsReader(language);
+        reader.read(step);
+
+        Builder builder = createBuilder(reader);
         try (Context context = builder.build()) {
             try {
                 Value job = createJobFromScript(context);
@@ -170,15 +160,6 @@ public abstract class ScriptJob extends Job<JobArguments> {
                 throw new ScriptJobException(this, getJobDefinitionLinesCount(this), e);
             }
         }
-    }
-
-    private Builder createBuilder(OrderProcessStep<JobArguments> step, Map<String, String> options) throws Exception {
-        Builder builder = Context.newBuilder(language).allowAllAccess(true).allowHostAccess(HostAccess.ALL).allowHostClassLookup(className -> true)
-                .allowExperimentalOptions(true);
-        if (options != null) {
-            builder.options(options);
-        }
-        return builder;
     }
 
     private Value createJobFromScript(Context context) throws Exception {
@@ -373,64 +354,12 @@ public abstract class ScriptJob extends Job<JobArguments> {
         return defaultValue;
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, String> getJobOptionsFromArgs(OrderProcessStep<JobArguments> step) throws Exception {
-        JobArgument<?> argOptionsResolved = step.getAllArguments().get(getArgumentNameOptionsResolved());
-        if (argOptionsResolved != null && !argOptionsResolved.isEmpty()) {
-            if (step.getLogger().isTraceEnabled()) {
-                step.getLogger().trace("[getJobOptionsFromArgs][" + argOptionsResolved.getName() + "]" + argOptionsResolved.getValue());
-            }
-            return (Map<String, String>) argOptionsResolved.getValue();
-        }
-        JobArgument<?> argOptions = step.getAllArguments().get(getArgumentNameOptions());
-        if (argOptions != null && !argOptions.isEmpty()) {
-            return getJobOptions(step, argOptions.getName(), (String) argOptions.getValue());
-        }
-        return null;
-    }
-
-    private Map<String, String> getJobOptions(OrderProcessStep<JobArguments> step, String optionsName, String optionsValue) throws Exception {
-        if (optionsValue == null) {
-            return null;
-        }
-
-        Map<String, String> options = null;
-        String method = "getJobOptions";
-        if (optionsValue.startsWith("{")) {
-            ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(optionsValue, ScriptJobOptions.class);
-            if (o != null && o.getOptions() != null) {
-                options = o.getOptions();
-            }
-        } else {
-            File f = new File(optionsValue);
-            if (f.exists()) {
-                ScriptJobOptions o = JobHelper.OBJECT_MAPPER.readValue(f, ScriptJobOptions.class);
-                if (o != null && o.getOptions() != null) {
-                    options = o.getOptions();
-                }
-            } else {
-                if (step.getLogger().isDebugEnabled()) {
-                    step.getLogger().debug(String.format("[%s][%s=%s]file not found", method, optionsName, optionsValue));
-                }
-            }
-        }
-        return options;
-    }
-
     private static String getJobDefinition(ScriptJob job) throws Exception {
         String script = JOB_DEFINITIONS.get(job.language);
         if (script == null) {
             throw new ScriptJobException(job, "job definition not loaded");
         }
         return script;
-    }
-
-    private String getArgumentNameOptions() {
-        return JOB_OPTION_NAME_PREFIX + language;
-    }
-
-    private String getArgumentNameOptionsResolved() {
-        return getArgumentNameOptions() + ".resolved";
     }
 
     /** Returns the number of lines in the predefined job definition script.<br/>
@@ -443,6 +372,139 @@ public abstract class ScriptJob extends Job<JobArguments> {
             return (int) script.lines().count();
         } catch (Exception e) {
             return 0;
+        }
+    }
+
+    /** Creates a new Polyglot Context for executing user scripts.
+     * <p>
+     * Important permissions:
+     * <ul>
+     * <li>{@link Builder#allowHostAccess(boolean)}:
+     * <ul>
+     * <li>- {@code true}
+     * <ul>
+     * <li>set to {@code true} to allow the script to interact with Java objects explicitly passed into the script bindings.<br/>
+     * &nbsp;This enables access to Java methods and fields of these objects:
+     * <ul>
+     * <li>js7Environment - read(public methods) only</li>
+     * <li>js7Step - read and write(outcome, setExitCode)</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * </li>
+     * </ul>
+     * </li>
+     * </ul>
+     * </li>
+     * </ul>
+     * <p>
+     * Other permissions, including IO, threads, and native access, remain configurable. */
+    private Builder createBuilder(ScriptJobOptionsReader optionsReader) throws Exception {
+        Builder builder = Context.newBuilder(language);
+
+        // - Necessary -----------------------------------------------------------------------------------------------------
+        // Stream redirection:
+        // Fundamentally it works, but introduces too much overhead on both sides (Java and e.g., Python).
+        // Additionally, it produces STDOUT/STDERR output without respecting the log levels of step.getLogger().
+        // builder.out(new ScriptJobStdAdapter(step.getOut()));
+        // builder.err(new ScriptJobStdAdapter(step.getErr()));
+
+        // Configures which public constructors, methods or fields of public classes are accessible by guest applications.
+        // By default if allowAllAccess(boolean) is false the HostAccess.EXPLICIT policy will be used, otherwise HostAccess.ALL.
+        builder.allowHostAccess(HostAccess.ALL);
+
+        // - Not configurable /irrelevant -----------------------------------------------------------------------------------------------------
+        // Allows this context to spawn inner contexts that may change option values set for the outer context.
+        // var innerContext = Polyglot.newContext({languages: ["python"], allowIO: true});
+        // innerContext.eval("python", "open('/tmp/test.txt', 'w')");
+        // irrelevant ? - seems to be a JVM/Host-Context-Flag - because only a single Host-Context is created
+        builder.allowInnerContextOptions(false);
+
+        // Enables or disables sharing of any value between contexts.
+        // Value sharing is enabled by default and is not affected by allowAllAccess(boolean).
+        // false|true is irrelevant here, because only a single context is created and immediately closed, so no values are ever shared between contexts.
+        builder.allowValueSharing(false);
+
+        // - Configurable -----------------------------------------------------------------------------------------------------
+        configureFromOptions(optionsReader, builder);
+
+        return builder;
+    }
+
+    private void configureFromOptions(ScriptJobOptionsReader optionsReader, Builder builder) {
+        // Sets a filter that specifies the Java host classes that can be looked up by the guest application.
+        // If set to null then no class lookup is allowed and relevant language builtins are not available (e.g. Java.type in JavaScript).
+        // List<String> allowedPatterns = List.of("^com\\.sos.*", "^org\\.example.*");
+        // builder.allowHostClassLookup(className -> {
+        // for (String p : allowedPatterns) {
+        // if (java.util.regex.Pattern.matches(p, className)) {
+        // return true;
+        // }
+        // }
+        // return false;
+        // });
+        builder.allowHostClassLookup(optionsReader.getPolyglotOptionallowHostClassLookup("allowHostClassLookup"));
+
+        // irrelevant ...
+        // If host class loading is enabled, then the guest language is allowed to load new host classes via jar or class files.
+        // If all access is set to true, then the host class loading is enabled if it is not disallowed explicitly.
+        // For host class loading to be useful, IO operations host class lookup, and the host access policy needs to be configured as well.
+        // How to test? true|false ignored ...
+        builder.allowHostClassLoading(optionsReader.getBooleanPolyglotOption("allowHostClassLoading"));
+
+        // Allows guest languages to access the native interface.
+        // TODO allowNativeAccess = true?
+        // false Python - loading C-extensions like NumPy will fail, but it not works also with true
+        // false JavaScript - false: not really relevant
+        // false Java - SOSShell.executeCommand works
+        builder = builder.allowNativeAccess(optionsReader.getBooleanPolyglotOption("allowNativeAccess"));
+
+        // If true, allows guest language to execute external processes. Default is false.
+        // If all access is set to true, then process creation is enabled if not denied explicitly.
+        builder.allowCreateProcess(optionsReader.getBooleanPolyglotOption("allowCreateProcess"));
+
+        // If true, allows guest languages to create new threads. Default is false.
+        // If all access is set to true, then the creation of threads is enabled if not allowed explicitly.
+        // Threads created by guest languages are closed, when the context is closed.
+        builder.allowCreateThread(optionsReader.getBooleanPolyglotOption("allowCreateThread"));
+
+        // Allow environment access using the provided policy.
+        // If all access is true then the default environment access policy is EnvironmentAccess.INHERIT, otherwise EnvironmentAccess.NONE.
+        // The provided access policy must not be null.
+        // EnvironmentAccess.NONE: Python - no exceptions, returns None for a specific ENV variable
+        builder.allowEnvironmentAccess(optionsReader.getPolyglotOptionEnvironmentAccess("allowEnvironmentAccess"));
+
+        // Allow experimental options to be used for language options.
+        // Do not use experimental options in production environments.
+        // If set to false (the default), then passing an experimental option results in an IllegalArgumentException when the context is built.
+        // TODO unclear - how to test
+        builder.allowExperimentalOptions(optionsReader.getBooleanPolyglotOption("allowExperimentalOptions"));
+
+        IOAccess.Builder ioBuilder = IOAccess.newBuilder();
+        // If true, it allows the GUEST language (not Java) unrestricted access to files on the host system.
+        // false Python - "open/or subprocess.run" will fail with PermissionError: [Errno 1] Operation not permitted: 'path.txt'
+        // -- with Path("path.txt").open("r") as f:
+        // -- print(f.read())
+        // false Java - io Files.readAllLines(path, StandardCharsets.UTF_8) will work because of allowHostAccess/allowHostClassLookup
+        ioBuilder.allowHostFileAccess(optionsReader.getBooleanPolyglotOption("IOAccess.allowHostFileAccess"));
+
+        // If true, it allows the guest language unrestricted access to host system sockets.
+        // false Python - PolyglotException(a RuntimeException): socket was excluded
+        // false Java - works
+        ioBuilder.allowHostSocketAccess(optionsReader.getBooleanPolyglotOption("IOAccess.allowHostSocketAccess"));
+        // ioBuilder.fileSystem(null);
+        builder.allowIO(ioBuilder.build());
+
+        // Allow polyglot access using the provided policy.
+        // If all access is true then the default polyglot access policy is PolyglotAccess.ALL, otherwise PolyglotAccess.NONE.
+        // The provided access policy must not be null.
+        // e.g., import polyglot
+        // js = polyglot.eval(language="js", string='1+2')
+        // PolyglotAccess.NONE Python - [Exception] polyglot access is not allowed
+        builder.allowPolyglotAccess(optionsReader.getPolyglotOptionPolyglotAccess("allowPolyglotAccess"));
+
+        if (optionsReader.getResult().hasLanguageOptions()) {
+            builder.options(optionsReader.getResult().getLanguageOptions());
         }
     }
 

@@ -48,6 +48,24 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobAllowedOptions() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-AllowedOptions.jobdef";
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        // if JS7Job.jobdef uses js7.IncludableArgument.SSH_PROVIDER - set required argument user
+        // args.put("user", "from java PythonJobTest");
+
+        Map<String, Map<String, Integer>> map = new HashMap<>();
+        map.put("first_map", Collections.singletonMap("submap_1", 1));
+        args.put("op_arg_map", map);
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
     public void testJobHelloWorld() throws Exception {
         String file = "src/test/resources/jobs/python/JS7Job-HelloWorld.jobdef";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
@@ -74,12 +92,27 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
-    public void testJobSimplePrint() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Simple-Print.jobdef";
+    public void testJobLogging() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Logging.jobdef";
 
         Map<String, Object> args = new HashMap<>();
         // args.put("my_arg1", "xyz");
         // args.put("my_arg2", "xyz");
+
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
+    public void testJobLoggingStdAdapter() throws Exception {
+        // ScripJob.createBuilder: builder.out/builder.err should be set if JS7 environment
+        // -- is not really testable because of SLFJ logger used by Junit tests
+        // but SLFJ logger produces expected output if cripJob.createBuilder: builder.out/builder.err are not set ..
+        String file = "src/test/resources/jobs/python/JS7Job-Logging-StdAdapter.jobdef";
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options));
 
         execute(new PythonJob(null), file, args);
     }

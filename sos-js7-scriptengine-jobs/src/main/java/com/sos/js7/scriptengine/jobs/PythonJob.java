@@ -9,12 +9,18 @@ import org.graalvm.polyglot.Value;
 
 import com.sos.js7.job.JobArgument;
 
-/** Polyglot API 25.0.1<br/>
- * - Context options:<br/>
- * -- See https://www.graalvm.org/python/docs/#python-context-options<br/>
- * -- JS7: js7_options.graalvm.python<br/>
- * - Known bugs:<br/>
- * -- IsolateNativeModules=true, see https://github.com/oracle/graalpython/issues/563 */
+/** PythonJob (Polyglot API 25.0.1)
+ * <p>
+ * Options support:
+ * <ul>
+ * <li>JS7 Argument name: js7_options.graalvm.python</li>
+ * <li>GraalVM Context options: see https://www.graalvm.org/python/docs/#python-context-options</li></li>
+ * </ul>
+ * Known bugs:
+ * <ul>
+ * <li>IsolateNativeModules=true, see https://github.com/oracle/graalpython/issues/563</li>
+ * <ul>
+ */
 public class PythonJob extends ScriptJob {
 
     private static final String LANGUAGE = "python";

@@ -7,10 +7,13 @@ import org.graalvm.polyglot.Value;
 
 import com.sos.js7.job.JobArgument;
 
-/** Polyglot API 25.0.1<br/>
- * - Context options:<br/>
- * -- See https://www.graalvm.org/latest/reference-manual/js/Options/<br/>
- * -- JS7: js7_options.graalvm.js<br/>
+/** JavaScriptJob (Polyglot API 25.0.1)
+ * <p>
+ * Options support:
+ * <ul>
+ * <li>JS7 Argument name: js7_options.graalvm.js</li>
+ * <li>GraalVM Context options: see https://www.graalvm.org/latest/reference-manual/js/Options/</li>
+ * </ul>
  */
 public class JavaScriptJob extends ScriptJob {
 

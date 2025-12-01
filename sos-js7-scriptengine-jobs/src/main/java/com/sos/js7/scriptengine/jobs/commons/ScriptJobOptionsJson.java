@@ -1,4 +1,4 @@
-package com.sos.js7.scriptengine.json;
+package com.sos.js7.scriptengine.jobs.commons;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "options" })
-public class ScriptJobOptions {
+public class ScriptJobOptionsJson {
 
     @JsonProperty("options")
     @JsonDeserialize(as = java.util.LinkedHashMap.class)
@@ -22,7 +22,7 @@ public class ScriptJobOptions {
     }
 
     @JsonProperty("options")
-    public void setOrderIds(Map<String, String> val) {
+    public void setOptions(Map<String, String> val) {
         options = val;
     }
 

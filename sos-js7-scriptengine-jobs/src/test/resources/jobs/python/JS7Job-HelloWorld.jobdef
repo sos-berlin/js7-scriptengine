@@ -1,5 +1,5 @@
 class JS7Job(js7.Job):
 	
-	def processOrder(self, js7Step):
-		js7Step.getLogger().info("hello world")
-		# do some stuff
+    def processOrder(self, js7Step):
+        js7Step.getLogger().info("hello world")
+            # do some stuff

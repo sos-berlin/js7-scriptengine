@@ -1,6 +1,22 @@
 {
-	"_comment": "See https://www.graalvm.org/python/docs/#python-context-options",
-	"options": {
-		"python.PythonPath": "src/test/resources/modules/python/;D:/Programme/Python/3.13.9/Lib/site-packages"
-	}
+    "_comment": "See https://www.graalvm.org/python/docs/#python-context-options",
+    "options": {
+        "js7.polyglot.allowHostClassLookup": true,
+        "js7.polyglot.allowHostClassLoading": true,
+        "js7.polyglot.allowNativeAccess": true,
+        "js7.polyglot.allowCreateProcess": true,
+        "js7.polyglot.allowCreateThread": true,
+        "js7.polyglot.allowExperimentalOptions": false,
+        "js7.polyglot.allowEnvironmentAccess": true,
+        "js7.polyglot.allowPolyglotAccess": true,
+        "js7.polyglot.IOAccess.allowHostFileAccess": true,
+        "js7.polyglot.IOAccess.allowHostSocketAccess": true,
+        "python.PythonPath": "src/test/resources/modules/python/;D:/Programme/Python/3.13.9/Lib/site-packages"
+    },
+    "options_example_positive_regex": {
+        "js7.polyglot.allowHostClassLookup": "java\\.io\\.File|java\\.nio\\.Path"
+    },
+    "options_example_negative_regex": {
+        "js7.polyglot.allowHostClassLookup": "!java\\.io\\.File|java\\.nio\\.Path"
+    }
 }

@@ -9,8 +9,8 @@ import java.util.regex.Pattern;
 import org.graalvm.polyglot.EnvironmentAccess;
 import org.graalvm.polyglot.PolyglotAccess;
 
-import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.JobHelper;
@@ -88,7 +88,7 @@ public class ScriptJobOptionsReader {
             return value;
         }
         String val = getResult().polyglotOptions.get(POLYGLOT_OPTION_NAME_PREFIX + optionName);
-        if (SOSClassUtil.isBoolean(val)) {
+        if (SOSString.isBoolean(val)) {
             value = Boolean.parseBoolean(val);
         }
         return value;
@@ -103,7 +103,7 @@ public class ScriptJobOptionsReader {
         if (val == null) {
             return value;
         }
-        if (SOSClassUtil.isBoolean(val)) {
+        if (SOSString.isBoolean(val)) {
             if (!Boolean.valueOf(val)) {
                 value = className -> false;
             }
@@ -137,7 +137,7 @@ public class ScriptJobOptionsReader {
             return value;
         }
 
-        if (SOSClassUtil.isBoolean(val)) {
+        if (SOSString.isBoolean(val)) {
             if (!Boolean.valueOf(val)) {
                 value = EnvironmentAccess.NONE;
             }
@@ -161,7 +161,7 @@ public class ScriptJobOptionsReader {
             return value;
         }
 
-        if (SOSClassUtil.isBoolean(val)) {
+        if (SOSString.isBoolean(val)) {
             if (!Boolean.valueOf(val)) {
                 value = PolyglotAccess.NONE;
             }

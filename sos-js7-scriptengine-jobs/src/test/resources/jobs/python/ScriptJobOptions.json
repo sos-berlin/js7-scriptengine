@@ -1,5 +1,7 @@
 {
-    "_comment": "See https://www.graalvm.org/python/docs/#python-context-options",
+    "_comment_polyglot_options_sdk": "https://www.graalvm.org/25.0/javadoc/sdk/org/graalvm/polyglot/Context.Builder.html",
+    "_comment_polyglot_options_embed-languages": "https://www.graalvm.org/latest/reference-manual/embed-languages/",
+    "_comment_python_options": "https://www.graalvm.org/python/docs/#python-context-options",
     "options": {
         "js7.polyglot.allowHostClassLookup": true,
         "js7.polyglot.allowHostClassLoading": true,

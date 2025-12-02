@@ -413,25 +413,42 @@ public abstract class ScriptJob extends Job<JobArguments> {
         // By default if allowAllAccess(boolean) is false the HostAccess.EXPLICIT policy will be used, otherwise HostAccess.ALL.
         builder.allowHostAccess(HostAccess.ALL);
 
-        // - Not configurable /irrelevant -----------------------------------------------------------------------------------------------------
-        // Allows this context to spawn inner contexts that may change option values set for the outer context.
-        // var innerContext = Polyglot.newContext({languages: ["python"], allowIO: true});
-        // innerContext.eval("python", "open('/tmp/test.txt', 'w')");
-        // irrelevant ? - seems to be a JVM/Host-Context-Flag - because only a single Host-Context is created
-        builder.allowInnerContextOptions(false);
-
-        // Enables or disables sharing of any value between contexts.
-        // Value sharing is enabled by default and is not affected by allowAllAccess(boolean).
-        // false|true is irrelevant here, because only a single context is created and immediately closed, so no values are ever shared between contexts.
-        builder.allowValueSharing(false);
-
         // - Configurable -----------------------------------------------------------------------------------------------------
-        configureFromOptions(optionsReader, builder);
+        configurePolyglotPotentialFlags(optionsReader, builder);
+        configurePolyglot(optionsReader, builder);
+
+        if (optionsReader.getResult().hasLanguageOptions()) {
+            builder.options(optionsReader.getResult().getLanguageOptions());
+        }
 
         return builder;
     }
 
-    private void configureFromOptions(ScriptJobOptionsReader optionsReader, Builder builder) {
+    /** Configure potential flags from options.<br/>
+     * These flags are exposed to the user for configurability, but in this setup they are mostly irrelevant, <br/>
+     * e.g., allowValueSharing or allowInnerContextOptions have no practical effect since each job processOrder uses its own context. */
+    private void configurePolyglotPotentialFlags(ScriptJobOptionsReader optionsReader, Builder builder) {
+        // irrelevant ...
+        // If host class loading is enabled, then the guest language is allowed to load new host classes via jar or class files.
+        // If all access is set to true, then the host class loading is enabled if it is not disallowed explicitly.
+        // For host class loading to be useful, IO operations host class lookup, and the host access policy needs to be configured as well.
+        // How to test? true|false ignored ...
+        builder.allowHostClassLoading(optionsReader.getBooleanPolyglotOption("allowHostClassLoading"));
+
+        // - irrelevant ....
+        // Allows this context to spawn inner contexts that may change option values set for the outer context.
+        // var innerContext = Polyglot.newContext({languages: ["python"], allowIO: true});
+        // innerContext.eval("python", "open('/tmp/test.txt', 'w')");
+        // irrelevant ? - seems to be a JVM/Host-Context-Flag - because only a single Host-Context is created
+        builder.allowInnerContextOptions(optionsReader.getBooleanPolyglotOption("allowInnerContextOptions"));
+
+        // Enables or disables sharing of any value between contexts.
+        // Value sharing is enabled by default and is not affected by allowAllAccess(boolean).
+        // false|true is irrelevant here, because only a single context is created and immediately closed, so no values are ever shared between contexts.
+        builder.allowValueSharing(optionsReader.getBooleanPolyglotOption("allowValueSharing"));
+    }
+
+    private void configurePolyglot(ScriptJobOptionsReader optionsReader, Builder builder) {
         // Sets a filter that specifies the Java host classes that can be looked up by the guest application.
         // If set to null then no class lookup is allowed and relevant language builtins are not available (e.g. Java.type in JavaScript).
         // List<String> allowedPatterns = List.of("^com\\.sos.*", "^org\\.example.*");
@@ -445,19 +462,12 @@ public abstract class ScriptJob extends Job<JobArguments> {
         // });
         builder.allowHostClassLookup(optionsReader.getPolyglotOptionallowHostClassLookup("allowHostClassLookup"));
 
-        // irrelevant ...
-        // If host class loading is enabled, then the guest language is allowed to load new host classes via jar or class files.
-        // If all access is set to true, then the host class loading is enabled if it is not disallowed explicitly.
-        // For host class loading to be useful, IO operations host class lookup, and the host access policy needs to be configured as well.
-        // How to test? true|false ignored ...
-        builder.allowHostClassLoading(optionsReader.getBooleanPolyglotOption("allowHostClassLoading"));
-
         // Allows guest languages to access the native interface.
         // TODO allowNativeAccess = true?
         // false Python - loading C-extensions like NumPy will fail, but it not works also with true
         // false JavaScript - false: not really relevant
         // false Java - SOSShell.executeCommand works
-        builder = builder.allowNativeAccess(optionsReader.getBooleanPolyglotOption("allowNativeAccess"));
+        builder.allowNativeAccess(optionsReader.getBooleanPolyglotOption("allowNativeAccess"));
 
         // If true, allows guest language to execute external processes. Default is false.
         // If all access is set to true, then process creation is enabled if not denied explicitly.
@@ -502,10 +512,6 @@ public abstract class ScriptJob extends Job<JobArguments> {
         // js = polyglot.eval(language="js", string='1+2')
         // PolyglotAccess.NONE Python - [Exception] polyglot access is not allowed
         builder.allowPolyglotAccess(optionsReader.getPolyglotOptionPolyglotAccess("allowPolyglotAccess"));
-
-        if (optionsReader.getResult().hasLanguageOptions()) {
-            builder.options(optionsReader.getResult().getLanguageOptions());
-        }
     }
 
     private static String loadResource(ScriptJob job, String resourceName) {

@@ -211,6 +211,22 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobWithCancelableCPythonSubprocess() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess.jobdef";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+        args.put("python_executable", "D:/Programme/Python/3.13.9/python.exe");
+        args.put("python_app", "src/test/resources/apps/python/cpython_app.py");
+
+        // execute(new PythonJob(null), file, args, 5);
+        execute(new PythonJob(null), file, args);
+    }
+
+    @Ignore
+    @Test
     public void testJobWithJS7ModulesJavaObjectInspector() throws Exception {
         String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-java_object_inspector.jobdef";
 

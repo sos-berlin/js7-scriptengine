@@ -16,9 +16,9 @@
         "python.PythonPath": "src/test/resources/modules/python/;D:/Programme/Python/3.13.9/Lib/site-packages"
     },
     "options_example_positive_regex": {
-        "js7.polyglot.allowHostClassLookup": "java\\.io\\.File|java\\.nio\\.Path"
+        "js7.polyglot.allowHostClassLookup": "java\\.io\\.File|java\\.nio\\.file\\.Path"
     },
     "options_example_negative_regex": {
-        "js7.polyglot.allowHostClassLookup": "!java\\.io\\.File|java\\.nio\\.Path"
+        "js7.polyglot.allowHostClassLookup": "!java\\.io\\.File|java\\.nio\\.file\\.Path"
     }
 }

@@ -1,8 +1,24 @@
 from java.lang import Thread, Runnable
 from java.io import BufferedReader, InputStreamReader
+import sys
+
+"""
+Kills not only the main subprocess but also any child processes it may have spawned, using Java's ProcessBuilder.
+
+Note: 
+    This is an example script. It should be implemented in actual Java, not via Python -> Java.
+
+Problem when calling a Python executable without the "-u" argument:
+    Some "live" Python stdout/stderr messages do not appear immediately but are delayed,
+    because Python buffers its output and there is no flag available comparable to the Python subprocess option "-u" for unbuffered mode.
+"""
 
 
 class ManagedProcess:
+    
+    @staticmethod
+    def is_windows():
+       return sys.platform == "win32"
     
     @staticmethod
     def _create_stream_reader(logger, is_stderr, stream):
@@ -11,10 +27,6 @@ class ManagedProcess:
 
             # The run method must be implemented because of Runnable.
             # Reading is performed using BufferedReader.
-            #
-            # Issue: 
-            #    some "live" Python stdout messages do not arrive live but with delay, because Python itself buffers the output 
-            #    and there is no flag available comparable to the Python subprocess option "-u" for unbuffered mode.
             def run(self):
                 reader = BufferedReader(InputStreamReader(stream, "UTF-8"))
                 try:
@@ -34,7 +46,7 @@ class ManagedProcess:
             # run method (renamed)
             # Reads byte-wise instead of using BufferedReader.
             #
-            # Same issue as above: Python output is still delayed because of Python's own buffering. 
+            # Same issue as above: Python output is still delayed because of Python's own buffering if -u is not set. 
             def runReadBytes(self):
                 from java.io import InputStreamReader
 
@@ -68,6 +80,11 @@ class ManagedProcess:
         
         if command_args is None:
             command_args = []
+            
+        if not ManagedProcess.is_windows():
+            # Prepend "setsid" on Unix to start the subprocess in a new process group,
+            # so that the main process and all its children can later be terminated together.
+            command_args = ["setsid"] + command_args
 
         pb = ProcessBuilder(*command_args)        
         process = pb.start()
@@ -93,14 +110,23 @@ class ManagedProcess:
         if process is None:
             return
         
+        from java.lang import ProcessBuilder
         try:
             if process.isAlive():
-                js7Step.getLogger().info(f"[ManagedProcess.cancel][destroyForcibly]{process}...") 
-                process.destroyForcibly()
+                js7Step.getLogger().info(f"[ManagedProcess.cancel]{process}...") 
+                pid = str(process.pid())
+                if ManagedProcess.is_windows():
+                    command_args = ["taskkill", "/PID", pid, "/T", "/F"]
+                else:
+                    command_args = ["kill", "-SIGKILL", "-" + pid]
+                    
+                rc = ProcessBuilder(*command_args).inheritIO().start().waitFor()
+                js7Step.getLogger().info(f"[ManagedProcess.cancel]rc={rc}") 
+                
         except Exception as e:
             js7Step.getLogger().error(f"[ManagedProcess.cancel][{process}]{e}") 
-
-
+    
+    
 class JS7Job(js7.Job):
 
     def processOrder(self, js7Step):
@@ -110,7 +136,7 @@ class JS7Job(js7.Job):
         python_executable = js7Step.getAllArgumentsAsNameValueMap().get("python_executable")
         python_app = js7Step.getAllArgumentsAsNameValueMap().get("python_app")
         
-        command_args = [python_executable, python_app]
+        command_args = [python_executable, "-u", python_app]
          # calculation result, here hard-coded
         command_args.append("js7Step_argument_1")
         command_args.append("js7Step_argument_2")

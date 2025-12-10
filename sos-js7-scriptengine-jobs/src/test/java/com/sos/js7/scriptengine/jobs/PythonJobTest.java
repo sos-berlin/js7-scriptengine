@@ -239,6 +239,21 @@ public class PythonJobTest extends ScriptJobTest {
 
     @Ignore
     @Test
+    public void testJobWithCancelableCPythonSubprocessManagedPythonProcessTree() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess-ManagedProcessPython-ProcessTree-NotWork.py";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+        args.put("python_executable", "D:/Programme/Python/3.13.9/python.exe");
+        args.put("python_app", "src/test/resources/apps/python/cpython_app.py");
+
+        execute(new PythonJob(null), file, args, 5);
+    }
+
+    @Ignore
+    @Test
     public void testJobWithCancelableCPythonSubprocessManagedJava() throws Exception {
         String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess-ManagedProcessJava.py";
 
@@ -249,7 +264,7 @@ public class PythonJobTest extends ScriptJobTest {
         args.put("python_executable", "D:/Programme/Python/3.13.9/python.exe");
         args.put("python_app", "src/test/resources/apps/python/cpython_app.py");
 
-        execute(new PythonJob(null), file, args, -5);
+        execute(new PythonJob(null), file, args, 5);
     }
 
     @Ignore

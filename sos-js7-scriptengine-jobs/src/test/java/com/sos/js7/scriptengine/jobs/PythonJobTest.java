@@ -19,7 +19,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobPythonInfos() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Python-Infos.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Python-Infos.py";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
@@ -31,11 +31,11 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobDeclaredArguments() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments.py";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
-        // if JS7Job.jobdef uses js7.IncludableArgument.SSH_PROVIDER - set required argument user
+        // if JS7Job-DeclaredArguments.py uses js7.IncludableArgument.SSH_PROVIDER - set required argument user
         // args.put("user", "from java PythonJobTest");
 
         Map<String, Map<String, Integer>> map = new HashMap<>();
@@ -49,12 +49,10 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobAllowedOptions() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-AllowedOptions.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-AllowedOptions.py";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
-        // if JS7Job.jobdef uses js7.IncludableArgument.SSH_PROVIDER - set required argument user
-        // args.put("user", "from java PythonJobTest");
 
         Map<String, Map<String, Integer>> map = new HashMap<>();
         map.put("first_map", Collections.singletonMap("submap_1", 1));
@@ -67,7 +65,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobHelloWorld() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-HelloWorld.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-HelloWorld.py";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
@@ -80,7 +78,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobImportCustomModule() throws Exception {
-        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-mysql.connector.jobdef";
+        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-mysql.connector.py";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
@@ -93,7 +91,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobLogging() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Logging.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Logging.py";
 
         Map<String, Object> args = new HashMap<>();
         // args.put("my_arg1", "xyz");
@@ -108,7 +106,7 @@ public class PythonJobTest extends ScriptJobTest {
         // ScripJob.createBuilder: builder.out/builder.err should be set if JS7 environment
         // -- is not really testable because of SLFJ logger used by Junit tests
         // but SLFJ logger produces expected output if cripJob.createBuilder: builder.out/builder.err are not set ..
-        String file = "src/test/resources/jobs/python/JS7Job-Logging-StdAdapter.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Logging-StdAdapter.py";
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
         Map<String, Object> args = new HashMap<>();
@@ -120,7 +118,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobSimpleErrors() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Simple-Errors.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Simple-Errors.py";
 
         Map<String, Object> args = new HashMap<>();
         // args.put("my_arg1", "xyz");
@@ -132,7 +130,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobSimpleWithConstructor() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Simple-WithConstructor.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Simple-WithConstructor.py";
 
         Map<String, Object> args = new HashMap<>();
 
@@ -142,7 +140,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithCredentialStore() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments-IncludedArguments-CredentialStore.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-DeclaredArguments-IncludedArguments-CredentialStore.py";
 
         Map<String, Object> args = new HashMap<>();
         addCredentialStoreArguments(args);
@@ -153,7 +151,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithSSHProvider() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-SSHProvider.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-SSHProvider.py";
 
         Map<String, Object> args = new HashMap<>();
         addCredentialStoreArguments(args);
@@ -167,7 +165,7 @@ public class PythonJobTest extends ScriptJobTest {
     public void testJobWithJOCApiExecutor() throws Exception {
         setAgentProperties();
 
-        String file = "src/test/resources/jobs/python/JS7Job-JOCApiExecutor.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-JOCApiExecutor.py";
 
         Map<String, Object> args = new HashMap<>();
         // addCredentialStoreArguments(args);
@@ -179,7 +177,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithSOSHibernate() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-SOSHibernate-SQLExecutor.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-SOSHibernate-SQLExecutor.py";
 
         Map<String, Object> args = new HashMap<>();
 
@@ -189,7 +187,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithExecuteJobSQLExecutorJob() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-ExecuteJob-SQLExecutorJob.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-ExecuteJob-SQLExecutorJob.py";
 
         Map<String, Object> args = new HashMap<>();
 
@@ -199,7 +197,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithCancelablePythonObject() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-PythonObject.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-PythonObject.py";
 
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
@@ -212,7 +210,7 @@ public class PythonJobTest extends ScriptJobTest {
     @Ignore
     @Test
     public void testJobWithCancelableCPythonSubprocess() throws Exception {
-        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess.jobdef";
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess.py";
 
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
@@ -221,14 +219,43 @@ public class PythonJobTest extends ScriptJobTest {
         args.put("python_executable", "D:/Programme/Python/3.13.9/python.exe");
         args.put("python_app", "src/test/resources/apps/python/cpython_app.py");
 
-        // execute(new PythonJob(null), file, args, 5);
-        execute(new PythonJob(null), file, args);
+        execute(new PythonJob(null), file, args, -5);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithCancelableCPythonSubprocessManagedPython() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess-ManagedProcessPython.py";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+        args.put("python_executable", "D:/Programme/Python/3.13.9/python.exe");
+        args.put("python_app", "src/test/resources/apps/python/cpython_app.py");
+
+        execute(new PythonJob(null), file, args, -5);
+    }
+
+    @Ignore
+    @Test
+    public void testJobWithCancelableCPythonSubprocessManagedJava() throws Exception {
+        String file = "src/test/resources/jobs/python/JS7Job-Cancelable-CPython-Subprocess-ManagedProcessJava.py";
+
+        Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
+
+        Map<String, Object> args = new HashMap<>();
+        args.put(ARG_NAME_OPTIONS, SOSPath.readFile(options)); // as string
+        args.put("python_executable", "D:/Programme/Python/3.13.9/python.exe");
+        args.put("python_app", "src/test/resources/apps/python/cpython_app.py");
+
+        execute(new PythonJob(null), file, args, -5);
     }
 
     @Ignore
     @Test
     public void testJobWithJS7ModulesJavaObjectInspector() throws Exception {
-        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-java_object_inspector.jobdef";
+        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-java_object_inspector.py";
 
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 
@@ -245,7 +272,7 @@ public class PythonJobTest extends ScriptJobTest {
         // PythonJob.py is a copy of src/resources/PythonJob.jobdef to make it importable as a module
         // Note: currently, the job is loaded twice (once from .jobdef, once as the module)
 
-        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-js7_job_hello_world.jobdef";
+        String file = "src/test/resources/jobs/python/custom_modules/JS7Job-js7.modules-js7_job_hello_world.py";
 
         Path options = Paths.get("src/test/resources/jobs/python/ScriptJobOptions.json");
 

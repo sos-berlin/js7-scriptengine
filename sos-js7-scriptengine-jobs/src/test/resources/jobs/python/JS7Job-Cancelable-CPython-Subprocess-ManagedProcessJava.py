@@ -58,7 +58,7 @@ class ManagedProcess:
                         break
                     char = chr(c)
                     buf += char
-                    if char == '\n':  # line is complete → loggen
+                    if char == '\n':  # line is complete
                         line = buf.rstrip()
                         if is_stderr:
                             logger.error(line)
@@ -148,8 +148,8 @@ class JS7Job(js7.Job):
         #######################################################################################################
         # Step 3 - Post-Processing - evaluate return code/stderr, etc. to set the js7Step outcome: js7Step.ge      
         js7Step.getLogger().info(f"[ManagedProcess]returncode={returncode}")
-        js7Step.getOutcome().setReturnCode(returncode);
-        js7Step.getOutcome().putVariable("outcome_var_name", "outcome_var_value");
+        js7Step.getOutcome().setReturnCode(returncode)
+        js7Step.getOutcome().putVariable("outcome_var_name", "outcome_var_value")
         
     def onProcessOrderCanceled(self, js7Step):
          ManagedProcess.cancel(js7Step)

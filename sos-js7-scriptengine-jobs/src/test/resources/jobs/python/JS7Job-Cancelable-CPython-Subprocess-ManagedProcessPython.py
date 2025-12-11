@@ -85,9 +85,7 @@ class ManagedProcess:
                 process.kill()
         except Exception as e:
             js7Step.getLogger().error(f"[ManagedProcess.cancel][{process}]{e}") 
-
-        return process.wait()
-
+   
 
 class JS7Job(js7.Job):
 

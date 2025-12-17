@@ -4,8 +4,8 @@ class JS7Job(js7.Job):
         js7Step.getLogger().info("hello world with js7Step logger")
         
 		# var 1 - info, error
-        #import sys
-        #def print(*args, **kwargs):
+        # import sys
+        # def print(*args, **kwargs):
         #    message = " ".join(str(a) for a in args)
         #    file = kwargs.get("file", sys.stdout)
         #    if file == sys.stderr:
@@ -16,9 +16,14 @@ class JS7Job(js7.Job):
         # var 2 - info, error
         import builtins, sys
         builtins.print = lambda *args, **kwargs: js7Step.getLogger().error(" ".join(str(a) for a in args)) if kwargs.get("file", sys.stdout) == sys.stderr else js7Step.getLogger().info(" ".join(str(a) for a in args))
-
         
-        variable="variable value"
+        variable = "variable value"
         print(f"hello world with print - info - {variable}")
         print("hello", "world", "with", f"print - info - {variable}", "multiple arguments")
         print('hello world with print - error', file=sys.stderr)
+        
+        try:
+            raise ValueError("My Value error")
+        except Exception as e:
+            print("exception", e, file=sys.stderr)
+        

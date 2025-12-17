@@ -2,6 +2,7 @@ package com.sos.js7.scriptengine.jobs.commons;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -26,16 +27,24 @@ public abstract class ScriptJobTest {
         System.setProperty("JS7_AGENT_CONFIG_DIR", privateConfPath.toString());
     }
 
-    public void execute(Job<JobArguments> job, String file, Map<String, Object> args) throws Exception {
-        execute(job, file, args, 0);
+    public void execute(Job<JobArguments> job, Path scriptFile, Map<String, Object> args) throws Exception {
+        execute(job, SOSPath.readFile(scriptFile), args, 0);
     }
 
-    public void execute(Job<JobArguments> job, String file, Map<String, Object> args, int cancelAfterSeconds) throws Exception {
-        String script = "";
+    public void execute(Job<JobArguments> job, Path scriptFile, Map<String, Object> args, int cancelAfterSeconds) throws Exception {
+        execute(job, SOSPath.readFile(scriptFile), args, cancelAfterSeconds);
+    }
 
-        if (file != null) {
-            script = SOSPath.readFile(Paths.get(file));
+    public void execute(Job<JobArguments> job, Collection<Path> scriptFiles, Map<String, Object> args, int cancelAfterSeconds) throws Exception {
+        StringBuilder script = new StringBuilder();
+        for (Path scriptFile : scriptFiles) {
+            script.append(SOSPath.readFile(scriptFile));
+            script.append("\n");
         }
+        execute(job, script.toString(), args, cancelAfterSeconds);
+    }
+
+    private void execute(Job<JobArguments> job, String script, Map<String, Object> args, int cancelAfterSeconds) throws Exception {
         UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(job);
         SOSReflection.setDeclaredFieldValue(h.getJob(), "script", script);
         if (cancelAfterSeconds > 0) {

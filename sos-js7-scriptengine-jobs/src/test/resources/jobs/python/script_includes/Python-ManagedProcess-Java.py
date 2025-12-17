@@ -125,31 +125,3 @@ class ManagedProcess:
                 
         except Exception as e:
             js7Step.getLogger().error(f"[ManagedProcess.cancel][{process}]{e}") 
-    
-    
-class JS7Job(js7.Job):
-
-    def processOrder(self, js7Step):
-        
-        #######################################################################################################
-        # Step 1 - Pre-Processing - calculate python_app arguments       
-        python_executable = js7Step.getAllArgumentsAsNameValueMap().get("python_executable")
-        python_app = js7Step.getAllArgumentsAsNameValueMap().get("python_app")
-        
-        command_args = [python_executable, "-u", python_app]
-         # calculation result, here hard-coded
-        command_args.append("js7Step_argument_1")
-        command_args.append("js7Step_argument_2")
-
-        js7Step.getLogger().info(f"[ManagedProcess]run...")
-        #######################################################################################################
-        # Step 2 - Processing - call python_app      
-        returncode = ManagedProcess.run(js7Step, command_args)      
-        #######################################################################################################
-        # Step 3 - Post-Processing - evaluate return code/stderr, etc. to set the js7Step outcome: js7Step.ge      
-        js7Step.getLogger().info(f"[ManagedProcess]returncode={returncode}")
-        js7Step.getOutcome().setReturnCode(returncode)
-        js7Step.getOutcome().putVariable("outcome_var_name", "outcome_var_value")
-        
-    def onProcessOrderCanceled(self, js7Step):
-         ManagedProcess.cancel(js7Step)
